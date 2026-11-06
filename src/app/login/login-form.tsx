@@ -17,7 +17,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { adminDirectLoginAction, memberLoginAction } from '@/app/actions/auth';
+import { adminLoginWithPasswordAction, memberLoginAction } from '@/app/actions/auth';
 
 interface MemberItem {
   id: string;
@@ -39,18 +39,32 @@ export function LoginForm({ members, messName, messLogoUrl }: LoginFormProps) {
   const [activeTab, setActiveTab] = useState<'admin' | 'member'>('admin');
   const [selectedMemberId, setSelectedMemberId] = useState('');
   const [password, setPassword] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  // Admin Direct Login Handler
-  const handleAdminDirectLogin = async () => {
+  // Admin Login with Password Handler
+  const handleAdminLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setError(null);
+
+    if (!adminPassword.trim()) {
+      setError('অনুগ্রহ করে অ্যাডমিন পাসওয়ার্ড দিন (Please enter Admin Password).');
+      return;
+    }
+
     startTransition(async () => {
       try {
-        await adminDirectLoginAction();
+        const res = await adminLoginWithPasswordAction(adminPassword);
+        if (res.success && res.redirectUrl) {
+          router.push(res.redirectUrl);
+          router.refresh();
+        } else {
+          setError(res.error || 'ভুল অ্যাডমিন পাসওয়ার্ড! সঠিক পাসওয়ার্ড দিন।');
+        }
       } catch (err: any) {
-        // Next.js redirect throws NEXT_REDIRECT, which is expected
         if (err?.message && !err.message.includes('NEXT_REDIRECT')) {
           setError(err.message || 'Failed to enter Admin Panel.');
         }
@@ -166,11 +180,11 @@ export function LoginForm({ members, messName, messLogoUrl }: LoginFormProps) {
           )}
 
           {/* =========================================================
-              A. ADMIN PANEL DIRECT ACCESS (PASSWORD-FREE)
+              A. ADMIN PANEL ACCESS (PROTECTED BY PASSWORD)
           ========================================================= */}
           {activeTab === 'admin' && (
-            <div className="space-y-5 animate-in fade-in duration-200">
-              <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-3">
+            <form onSubmit={handleAdminLogin} className="space-y-4 animate-in fade-in duration-200">
+              <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-2.5">
                 <div className="flex items-center gap-2.5">
                   <div className="w-10 h-10 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-700 font-bold shrink-0">
                     <Crown className="w-5 h-5 text-amber-600" />
@@ -179,38 +193,60 @@ export function LoginForm({ members, messName, messLogoUrl }: LoginFormProps) {
                     <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-full border border-amber-300">
                       Permanent Primary Admin
                     </span>
-                    <h3 className="text-base font-bold text-slate-900 mt-1">
+                    <h3 className="text-base font-bold text-slate-900 mt-0.5">
                       Mohammad Tarek Hossen
                     </h3>
                   </div>
                 </div>
 
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Direct authorized access for central mess administration. Full system authority to manage members, assign passwords, supervise the Manager, edit accounting records, and generate reports.
+                  Enter your Admin Password to access the full administrative panel, accounting, reports, and mess settings.
                 </p>
+              </div>
 
-                <div className="pt-2 border-t border-amber-200/60 flex items-center justify-between text-[11px] text-slate-500">
-                  <span className="flex items-center gap-1 text-emerald-700 font-medium">
-                    <ShieldCheck className="w-3.5 h-3.5" /> Password-Free Admin Access
-                  </span>
-                  <span>Private Host</span>
+              {/* Admin Password Input Field */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700">
+                  অ্যাডমিন পাসওয়ার্ড (Admin Password)
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <KeyRound className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <input
+                    type={showAdminPassword ? 'text' : 'password'}
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    placeholder="Enter Admin Password"
+                    disabled={isPending}
+                    className="w-full pl-9 pr-10 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-slate-900 bg-slate-50/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminPassword(!showAdminPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    {showAdminPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
               <Button
-                type="button"
-                onClick={handleAdminDirectLogin}
+                type="submit"
                 disabled={isPending}
                 className="w-full h-11 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer text-sm"
               >
-                <span>{isPending ? 'Entering Admin Panel...' : 'Enter Admin Panel'}</span>
+                <span>{isPending ? 'Verifying Password...' : 'Enter Admin Panel'}</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
 
-              <p className="text-center text-[11px] text-slate-400">
-                Authorized for Mohammad Tarek Hossen and shared administrators.
-              </p>
-            </div>
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                <span className="flex items-center gap-1 text-emerald-700 font-medium">
+                  <ShieldCheck className="w-3.5 h-3.5" /> Protected Admin Access
+                </span>
+                <span>Authorized Only</span>
+              </div>
+            </form>
           )}
 
           {/* =========================================================

@@ -671,16 +671,20 @@ export function MemberManagementClient({
                           </button>
 
                           {/* Manage Login & Password */}
-                          {!m.isPrimaryAdmin && (
+                          {(!m.isPrimaryAdmin || currentUser.isPrimaryAdmin) && (
                             <button
                               onClick={() => {
                                 setPasswordModalMember(m);
                                 setNewPasswordInput('');
                               }}
-                              title="Manage Password & Login Access"
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-700 hover:bg-indigo-50 transition-colors cursor-pointer"
+                              title={m.isPrimaryAdmin ? 'Change Admin Password' : 'Manage Password & Login Access'}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                m.isPrimaryAdmin
+                                  ? 'text-amber-600 hover:text-amber-800 hover:bg-amber-50'
+                                  : 'text-slate-500 hover:text-indigo-700 hover:bg-indigo-50'
+                              }`}
                             >
-                              <Key className="w-4 h-4 text-indigo-600" />
+                              <Key className={`w-4 h-4 ${m.isPrimaryAdmin ? 'text-amber-600' : 'text-indigo-600'}`} />
                             </button>
                           )}
 
@@ -1423,9 +1427,11 @@ export function MemberManagementClient({
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden border border-slate-200">
             <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Key className="w-5 h-5 text-indigo-600" />
+                <Key className={`w-5 h-5 ${passwordModalMember.isPrimaryAdmin ? 'text-amber-600' : 'text-indigo-600'}`} />
                 <h3 className="font-bold text-base text-slate-900">
-                  Password &amp; Login Access
+                  {passwordModalMember.isPrimaryAdmin
+                    ? 'অ্যাডমিন পাসওয়ার্ড পরিবর্তন (Admin Password)'
+                    : 'Password & Login Access'}
                 </h3>
               </div>
               <button
@@ -1467,79 +1473,95 @@ export function MemberManagementClient({
               <form onSubmit={handleUpdatePassword} className="space-y-3 pt-1">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Set New Password (Admin Controlled)
+                    {passwordModalMember.isPrimaryAdmin
+                      ? 'নতুন অ্যাডমিন পাসওয়ার্ড দিন (New Admin Password)'
+                      : 'Set New Password (Admin Controlled)'}
                   </label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       value={newPasswordInput}
                       onChange={(e) => setNewPasswordInput(e.target.value)}
-                      placeholder="Enter new password (min 4 chars)"
+                      placeholder={
+                        passwordModalMember.isPrimaryAdmin
+                          ? 'Enter new admin password'
+                          : 'Enter new password (min 4 chars)'
+                      }
                       className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm outline-hidden focus:ring-2 focus:ring-indigo-500"
                     />
                     <Button
                       type="submit"
                       disabled={isPending || newPasswordInput.trim().length < 4}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0"
+                      className={
+                        passwordModalMember.isPrimaryAdmin
+                          ? 'bg-amber-600 hover:bg-amber-700 text-white shrink-0'
+                          : 'bg-indigo-600 hover:bg-indigo-700 text-white shrink-0'
+                      }
                     >
-                      Save
+                      {passwordModalMember.isPrimaryAdmin ? 'Save Admin Password' : 'Save'}
                     </Button>
                   </div>
                   <p className="text-[11px] text-slate-500 mt-1">
-                    Only Admin can assign or change passwords. Members cannot change their own passwords.
+                    {passwordModalMember.isPrimaryAdmin
+                      ? 'Only Primary Admin Mohammad Tarek Hossen can change the Admin Password.'
+                      : 'Only Admin can assign or change passwords. Members cannot change their own passwords.'}
                   </p>
                 </div>
               </form>
 
-              {/* Reset to Default Action */}
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-slate-800">Quick Reset</p>
-                  <p className="text-[11px] text-slate-500">
-                    Reset password to default:{' '}
-                    <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-700 font-bold">
-                      mess1234
-                    </code>
-                  </p>
+              {/* Reset to Default Action - Only for regular members */}
+              {!passwordModalMember.isPrimaryAdmin && (
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-slate-800">Quick Reset</p>
+                    <p className="text-[11px] text-slate-500">
+                      Reset password to default:{' '}
+                      <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-700 font-bold">
+                        mess1234
+                      </code>
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResetDefaultPassword}
+                    disabled={isPending}
+                    className="text-xs shrink-0 cursor-pointer"
+                  >
+                    Reset to Default
+                  </Button>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleResetDefaultPassword}
-                  disabled={isPending}
-                  className="text-xs shrink-0 cursor-pointer"
-                >
-                  Reset to Default
-                </Button>
-              </div>
+              )}
 
-              {/* Toggle Login Access */}
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-slate-800">Login Permission</p>
-                  <p className="text-[11px] text-slate-500">
-                    {passwordModalMember.loginEnabled !== false
-                      ? 'Member can currently log in to the Member Portal.'
-                      : 'Member is currently blocked from signing in.'}
-                  </p>
+              {/* Toggle Login Access - Only for regular members */}
+              {!passwordModalMember.isPrimaryAdmin && (
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-slate-800">Login Permission</p>
+                    <p className="text-[11px] text-slate-500">
+                      {passwordModalMember.loginEnabled !== false
+                        ? 'Member can currently log in to the Member Portal.'
+                        : 'Member is currently blocked from signing in.'}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={passwordModalMember.loginEnabled !== false ? 'destructive' : 'default'}
+                    onClick={() =>
+                      handleToggleLoginAccess(
+                        passwordModalMember,
+                        passwordModalMember.loginEnabled !== false
+                      )
+                    }
+                    disabled={isPending || passwordModalMember.isPrimaryAdmin}
+                    className="text-xs shrink-0 cursor-pointer"
+                  >
+                    {passwordModalMember.loginEnabled !== false ? 'Disable Login' : 'Enable Login'}
+                  </Button>
                 </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={passwordModalMember.loginEnabled !== false ? 'destructive' : 'default'}
-                  onClick={() =>
-                    handleToggleLoginAccess(
-                      passwordModalMember,
-                      passwordModalMember.loginEnabled !== false
-                    )
-                  }
-                  disabled={isPending || passwordModalMember.isPrimaryAdmin}
-                  className="text-xs shrink-0 cursor-pointer"
-                >
-                  {passwordModalMember.loginEnabled !== false ? 'Disable Login' : 'Enable Login'}
-                </Button>
-              </div>
+              )}
 
               <div className="pt-3 border-t border-slate-100 flex justify-end">
                 <Button

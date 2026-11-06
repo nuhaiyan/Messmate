@@ -467,6 +467,10 @@ export async function setMemberPasswordAction(memberId: string, newPassword: str
     return { success: false, error: 'Member not found.' };
   }
 
+  if (member.isPrimaryAdmin && !session.isPrimaryAdmin) {
+    return { success: false, error: 'শুধুমাত্র মোহাম্মদ তারেক হোসেন অ্যাডমিন পাসওয়ার্ড পরিবর্তন করতে পারবেন।' };
+  }
+
   const passwordHash = await hashPassword(newPassword.trim());
 
   await prisma.user.update({
@@ -505,6 +509,10 @@ export async function resetMemberPasswordToDefaultAction(memberId: string) {
 
   if (!member) {
     return { success: false, error: 'Member not found.' };
+  }
+
+  if (member.isPrimaryAdmin) {
+    return { success: false, error: 'প্রাইমারি অ্যাডমিনের পাসওয়ার্ড মেম্বার ডিফল্টে রিসেট করা যাবে না।' };
   }
 
   const defaultPassword = 'mess1234';

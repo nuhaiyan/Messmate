@@ -2,16 +2,19 @@
 
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { comparePassword } from '@/lib/auth/password';
+import { comparePassword, hashPassword } from '@/lib/auth/password';
 import { setSessionCookie, clearSessionCookie, getSession } from '@/lib/auth/session';
 import { logActivity } from '@/lib/audit/audit-logger';
 
 /**
- * 1. Admin Direct Login (Password-Free Access)
- * Authenticates directly as the Permanent Primary Admin (Mohammad Tarek Hossen)
- * for private bachelor mess deployment.
+ * 1. Admin Login with Protected Admin Password (Default: 1514888683)
+ * Authenticates as the Permanent Primary Admin (Mohammad Tarek Hossen).
  */
-export async function adminDirectLoginAction() {
+export async function adminLoginWithPasswordAction(password: string) {
+  if (!password || password.trim().length === 0) {
+    return { success: false, error: 'অনুগ্রহ করে অ্যাডমিন পাসওয়ার্ড লিখুন (Please enter Admin Password).' };
+  }
+
   const tarek = await prisma.messMember.findFirst({
     where: { isPrimaryAdmin: true },
     include: { mess: true, user: true },
@@ -19,6 +22,11 @@ export async function adminDirectLoginAction() {
 
   if (!tarek) {
     return { success: false, error: 'Primary Admin account (Mohammad Tarek Hossen) not found in system.' };
+  }
+
+  const isValid = await comparePassword(password.trim(), tarek.user.passwordHash);
+  if (!isValid) {
+    return { success: false, error: 'ভুল অ্যাডমিন পাসওয়ার্ড! সঠিক পাসওয়ার্ড দিন (Incorrect Admin Password).' };
   }
 
   await setSessionCookie({
@@ -37,14 +45,18 @@ export async function adminDirectLoginAction() {
   await logActivity({
     messId: tarek.messId,
     userId: tarek.userId,
-    action: 'ADMIN_LOGIN_PASSWORD_FREE',
+    action: 'ADMIN_LOGIN',
     entity: 'USER',
     entityId: tarek.userId,
-    details: { name: tarek.fullName, role: 'PRIMARY_ADMIN', method: 'DIRECT_ADMIN_ACCESS' },
-    reason: 'Admin entered the Admin Panel via direct password-free access',
+    details: { name: tarek.fullName, role: 'PRIMARY_ADMIN' },
+    reason: 'Admin authenticated with Admin Password',
   });
 
-  redirect('/dashboard');
+  return { success: true, redirectUrl: '/dashboard' };
+}
+
+export async function adminDirectLoginAction() {
+  return adminLoginWithPasswordAction('1514888683');
 }
 
 /**
@@ -152,4 +164,55 @@ export async function getLoginMembersListAction() {
   });
 
   return members;
+}
+
+/**
+ * 5. Change Admin Password (Strictly restricted to Mohammad Tarek Hossen / Primary Admin)
+ */
+export async function changeAdminPasswordAction(data: {
+  currentPassword?: string;
+  newPassword: string;
+}) {
+  const session = await getSession();
+  if (!session || !session.isPrimaryAdmin) {
+    return { success: false, error: 'শুধুমাত্র প্রাইমারি অ্যাডমিন (Mohammad Tarek Hossen) অ্যাডমিন পাসওয়ার্ড পরিবর্তন করতে পারবেন।' };
+  }
+
+  if (!data.newPassword || data.newPassword.trim().length < 4) {
+    return { success: false, error: 'নতুন পাসওয়ার্ড কমপক্ষে ৪ অক্ষরের হতে হবে।' };
+  }
+
+  const tarek = await prisma.messMember.findFirst({
+    where: { isPrimaryAdmin: true },
+    include: { user: true },
+  });
+
+  if (!tarek) {
+    return { success: false, error: 'Primary Admin record not found in system.' };
+  }
+
+  if (data.currentPassword && data.currentPassword.trim().length > 0) {
+    const isCurrentValid = await comparePassword(data.currentPassword.trim(), tarek.user.passwordHash);
+    if (!isCurrentValid) {
+      return { success: false, error: 'বর্তমান অ্যাডমিন পাসওয়ার্ডটি সঠিক নয়।' };
+    }
+  }
+
+  const newHash = await hashPassword(data.newPassword.trim());
+  await prisma.user.update({
+    where: { id: tarek.userId },
+    data: { passwordHash: newHash },
+  });
+
+  await logActivity({
+    messId: session.messId,
+    userId: session.userId,
+    action: 'ADMIN_PASSWORD_CHANGED',
+    entity: 'USER',
+    entityId: tarek.userId,
+    details: { adminName: tarek.fullName },
+    reason: 'Primary Admin updated the Admin Panel password',
+  });
+
+  return { success: true, message: 'অ্যাডমিন পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে!' };
 }

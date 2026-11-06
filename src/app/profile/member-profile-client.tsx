@@ -23,10 +23,14 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   X,
+  KeyRound,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/context';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { updateMemberProfileAction, submitIndividualMealAction } from '@/app/actions/profile';
+import { changeAdminPasswordAction } from '@/app/actions/auth';
 
 interface MemberData {
   id: string;
@@ -129,6 +133,40 @@ export function MemberProfileClient({
   const [editPhone, setEditPhone] = useState(initialMember.phone);
   const [editBio, setEditBio] = useState(initialMember.bio);
   const [editAvatarUrl, setEditAvatarUrl] = useState(initialMember.avatarUrl || '');
+
+  // Admin Password Change Modal State
+  const [isAdminPasswordModalOpen, setIsAdminPasswordModalOpen] = useState(false);
+  const [adminCurrentPassword, setAdminCurrentPassword] = useState('');
+  const [adminNewPassword, setAdminNewPassword] = useState('');
+  const [showAdminNewPass, setShowAdminNewPass] = useState(false);
+  const [adminPasswordMsg, setAdminPasswordMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleChangeAdminPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminPasswordMsg(null);
+    if (!adminNewPassword.trim() || adminNewPassword.trim().length < 4) {
+      setAdminPasswordMsg({ type: 'error', text: 'নতুন পাসওয়ার্ড কমপক্ষে ৪ অক্ষরের হতে হবে।' });
+      return;
+    }
+
+    startTransition(async () => {
+      const res = await changeAdminPasswordAction({
+        currentPassword: adminCurrentPassword,
+        newPassword: adminNewPassword.trim(),
+      });
+      if (res.success) {
+        setAdminPasswordMsg({ type: 'success', text: res.message || 'অ্যাডমিন পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে!' });
+        setAdminCurrentPassword('');
+        setAdminNewPassword('');
+        setTimeout(() => {
+          setIsAdminPasswordModalOpen(false);
+          setAdminPasswordMsg(null);
+        }, 1500);
+      } else {
+        setAdminPasswordMsg({ type: 'error', text: res.error || 'Failed to update admin password.' });
+      }
+    });
+  };
 
   // Meal Entry State
   const todayStr = new Date().toISOString().split('T')[0];
@@ -289,15 +327,32 @@ export function MemberProfileClient({
           </div>
         </div>
 
-        {canEdit && (
-          <button
-            onClick={() => setIsEditModalOpen(true)}
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer shrink-0"
-          >
-            <Edit3 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>{t.profile?.editProfile || 'Edit Profile'}</span>
-          </button>
-        )}
+        <div className="flex items-center gap-2.5 flex-wrap shrink-0">
+          {member.isPrimaryAdmin && isOwnProfile && (
+            <button
+              onClick={() => {
+                setIsAdminPasswordModalOpen(true);
+                setAdminPasswordMsg(null);
+                setAdminCurrentPassword('');
+                setAdminNewPassword('');
+              }}
+              className="flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs hover:shadow-sm transition-all cursor-pointer"
+            >
+              <KeyRound className="w-4 h-4" />
+              <span>Change Admin Password</span>
+            </button>
+          )}
+
+          {canEdit && (
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer shrink-0"
+            >
+              <Edit3 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span>{t.profile?.editProfile || 'Edit Profile'}</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Quick Daily Meal Entry Box (Available for active members) */}
@@ -763,6 +818,110 @@ export function MemberProfileClient({
                   className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs disabled:opacity-50"
                 >
                   {isPending ? 'Saving...' : 'Save Profile'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Change Admin Password Modal (Strictly for Primary Admin) */}
+      {isAdminPasswordModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center">
+                  <KeyRound className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    অ্যাডমিন পাসওয়ার্ড পরিবর্তন (Change Admin Password)
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Authorized for Mohammad Tarek Hossen
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAdminPasswordModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleChangeAdminPassword} className="p-5 space-y-4">
+              {adminPasswordMsg && (
+                <div
+                  className={`p-3 rounded-xl text-xs font-medium flex items-start gap-2 ${
+                    adminPasswordMsg.type === 'success'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                      : 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+                  }`}
+                >
+                  {adminPasswordMsg.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+                  )}
+                  <span>{adminPasswordMsg.text}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  বর্তমান অ্যাডমিন পাসওয়ার্ড (Current Admin Password)
+                </label>
+                <input
+                  type="password"
+                  value={adminCurrentPassword}
+                  onChange={(e) => setAdminCurrentPassword(e.target.value)}
+                  placeholder="Enter current password (default: 1514888683)"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-900 dark:text-slate-100 focus:outline-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  নতুন অ্যাডমিন পাসওয়ার্ড (New Admin Password)
+                </label>
+                <div className="relative">
+                  <input
+                    type={showAdminNewPass ? 'text' : 'password'}
+                    value={adminNewPassword}
+                    onChange={(e) => setAdminNewPassword(e.target.value)}
+                    placeholder="Enter new password (min 4 characters)"
+                    required
+                    className="w-full px-3 pr-10 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-900 dark:text-slate-100 focus:outline-amber-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminNewPass(!showAdminNewPass)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    {showAdminNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  এই পাসওয়ার্ডটি শুধুমাত্র অ্যাডমিন প্যানেলে লগইন করার কাজে ব্যবহৃত হবে।
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsAdminPasswordModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPending || adminNewPassword.trim().length < 4}
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isPending ? 'Updating...' : 'Save New Password'}
                 </button>
               </div>
             </form>

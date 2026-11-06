@@ -98,6 +98,7 @@ async function main() {
 
   // 4. Exact 14 Members Preloaded with Clean Initial Opening Balances (0)
   const defaultPasswordHash = await bcrypt.hash('mess1234', 10);
+  const adminPasswordHash = await bcrypt.hash('1514888683', 10);
 
   const memberDefs = [
     { name: 'Mohammad Tarek Hossen', phone: '01711000001', room: 'Room 101', openingBal: 0, isPrimaryAdmin: true, isAdmin: true, isManager: false },
@@ -125,7 +126,7 @@ async function main() {
       data: {
         name: m.name,
         phone: m.phone,
-        passwordHash: defaultPasswordHash,
+        passwordHash: m.isPrimaryAdmin ? adminPasswordHash : defaultPasswordHash,
         role: m.isPrimaryAdmin ? 'ADMIN' : m.isManager ? 'MANAGER' : 'MEMBER',
         isActive: true,
       },
