@@ -138,7 +138,7 @@ async function testDashboardEnhancements() {
     reason: 'Automated test recalculation',
   });
   assert(
-    recalcRes.success === true && (recalcRes.mealRate ?? 0) > 0 && (recalcRes.totalMeals ?? 0) > 0,
+    recalcRes.success === true && Number(recalcRes.mealRate ?? 0) > 0 && Number(recalcRes.totalMeals ?? 0) > 0,
     6,
     `Meal rate recalculates dynamically: ৳${recalcRes.mealRate} (Bazar ৳${recalcRes.totalBazar} / Meals ${recalcRes.totalMeals})`
   );

@@ -364,8 +364,8 @@ export async function recalculateMealRateAction(data: {
     _sum: { amount: true },
   });
 
-  const totalMeals = meals._sum.totalMeals || 0;
-  const totalBazar = bazar._sum.amount || 0;
+  const totalMeals = Number(meals._sum.totalMeals || 0);
+  const totalBazar = Number(bazar._sum.amount || 0);
   const mealRate = totalMeals > 0 ? totalBazar / totalMeals : 0;
 
   await logActivity({
@@ -498,7 +498,7 @@ export async function resetOutstandingDuesAction(data: {
           memberId: member.memberId,
           depositDate,
           amount: Number(member.dueAmount.toFixed(2)),
-          paymentMethod: 'ADJUSTMENT',
+          paymentMethod: 'OTHER',
           notes: data.reason || 'Controlled due settlement & balance reset',
           createdById: session.userId,
         },

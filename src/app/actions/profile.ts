@@ -66,9 +66,9 @@ export async function getMemberProfileDataAction(params?: {
     take: 31,
   });
 
-  const bfSum = mealEntries.reduce((sum, m) => sum + m.breakfast, 0);
-  const lnSum = mealEntries.reduce((sum, m) => sum + m.lunch, 0);
-  const dnSum = mealEntries.reduce((sum, m) => sum + m.dinner, 0);
+  const bfSum = mealEntries.reduce((sum, m) => sum + Number(m.breakfast), 0);
+  const lnSum = mealEntries.reduce((sum, m) => sum + Number(m.lunch), 0);
+  const dnSum = mealEntries.reduce((sum, m) => sum + Number(m.dinner), 0);
 
   // Fetch recent deposits
   const deposits = await prisma.deposit.findMany({
@@ -151,15 +151,15 @@ export async function getMemberProfileDataAction(params?: {
     recentMeals: mealEntries.map((m) => ({
       id: m.id,
       date: m.date.toISOString(),
-      breakfast: m.breakfast,
-      lunch: m.lunch,
-      dinner: m.dinner,
-      totalMeals: m.totalMeals,
+      breakfast: Number(m.breakfast),
+      lunch: Number(m.lunch),
+      dinner: Number(m.dinner),
+      totalMeals: Number(m.totalMeals),
     })),
     recentDeposits: deposits.map((d) => ({
       id: d.id,
       date: d.depositDate.toISOString(),
-      amount: d.amount,
+      amount: Number(d.amount),
       method: d.paymentMethod,
       notes: d.notes,
     })),
@@ -167,13 +167,13 @@ export async function getMemberProfileDataAction(params?: {
       id: b.id,
       date: b.date.toISOString(),
       title: b.title,
-      amount: b.amount,
+      amount: Number(b.amount),
     })),
     recentExpenses: individualExpenses.map((e) => ({
       id: e.id,
       date: e.date.toISOString(),
       title: e.title,
-      amount: e.amount,
+      amount: Number(e.amount),
       category: e.category,
     })),
   };
@@ -362,5 +362,15 @@ export async function submitIndividualMealAction(data: {
   safeRevalidate('/dashboard');
   safeRevalidate('/reports');
 
-  return { success: true, entry };
+  return {
+    success: true,
+    entry: {
+      id: entry.id,
+      date: entry.date.toISOString(),
+      breakfast: Number(entry.breakfast),
+      lunch: Number(entry.lunch),
+      dinner: Number(entry.dinner),
+      totalMeals: Number(entry.totalMeals),
+    },
+  };
 }

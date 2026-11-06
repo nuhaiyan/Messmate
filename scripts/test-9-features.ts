@@ -93,7 +93,7 @@ async function runTests() {
         },
       },
     });
-    if (!savedEntry || savedEntry.totalMeals !== 3.5) {
+    if (!savedEntry || Number(savedEntry.totalMeals) !== 3.5) {
       throw new Error('Meal entry not properly stored in database');
     }
     console.log('  ✓ PASS: Individual daily meal entry upserted 3.5 meals (1 BF, 1 LN, 1.5 DN).');

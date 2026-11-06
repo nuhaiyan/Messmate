@@ -65,7 +65,7 @@ async function main() {
   });
 
   // 3. Default Expense Categories
-  const categories = [
+  const categories: { name: string; nameBn: string; type: 'BAZAR' | 'SHARED' | 'INDIVIDUAL' }[] = [
     { name: 'Rice', nameBn: 'চাল', type: 'BAZAR' },
     { name: 'Vegetables', nameBn: 'শাক-সবজি', type: 'BAZAR' },
     { name: 'Fish', nameBn: 'মাছ', type: 'BAZAR' },
