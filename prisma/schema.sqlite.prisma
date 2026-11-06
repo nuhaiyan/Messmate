@@ -1,0 +1,492 @@
+// MessMate - SQLite Schema (Zero-Config Development & Testing)
+// Mirrors PostgreSQL schema 100%
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String?       @unique
+  phone        String        @unique
+  passwordHash String        @default("")
+  role         String        @default("MEMBER") // MANAGER, MEMBER, ADMIN
+  isActive     Boolean       @default(true)
+  avatarUrl    String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  memberships  MessMember[]
+  auditLogs    AuditLog[]
+  createdExpenses Expense[]  @relation("ExpenseCreator")
+  createdDeposits  Deposit[]  @relation("DepositCreator")
+  createdNotices   Notice[]   @relation("NoticeCreator")
+
+  @@map("users")
+}
+
+model Mess {
+  id                    String       @id @default(cuid())
+  name                  String
+  address               String?
+  logoUrl               String?
+  coverUrl              String?
+  contactPhone          String?
+  description           String?
+  currency              String       @default("BDT")
+  currencySymbol        String       @default("৳")
+  timezone              String       @default("Asia/Dhaka")
+  fractionalMeals       Boolean      @default(true)
+  primaryManagerId      String?
+  primaryAdminMemberId  String?
+  currentManagerMemberId String?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  members               MessMember[]
+  monthlyPeriods        MonthlyPeriod[]
+  expenses              Expense[]
+  deposits              Deposit[]
+  closings              MonthlyClosing[]
+  auditLogs             AuditLog[]
+  settings              MessSetting?
+  profile               MessProfile?
+  categories            ExpenseCategory[]
+  managerAssignments   ManagerAssignment[]
+  adminPrivilegeLogs   AdminPrivilegeLog[]
+  notices               Notice[]
+  conversations         Conversation[]
+
+  @@map("messes")
+}
+
+model MessMember {
+  id                    String        @id @default(cuid())
+  messId                String
+  userId                String
+  fullName              String
+  phone                 String
+  email                 String?
+  roomNumber            String?
+  bio                   String?
+  avatarUrl             String?
+  joiningDate           DateTime      @default(now())
+  leavingDate           DateTime?
+  isActive              Boolean       @default(true)
+  isArchived            Boolean       @default(false)
+  archivedAt            DateTime?
+  isPrimaryAdmin        Boolean       @default(false)
+  isAdmin               Boolean       @default(false)
+  adminGrantedAt        DateTime?
+  adminGrantedById      String?
+  isManager             Boolean       @default(false)
+  initialOpeningBalance Float         @default(0)
+  notes                 String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  mess                  Mess          @relation(fields: [messId], references: [id], onDelete: Cascade)
+  user                  User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  
+  mealEntries           MealEntry[]
+  deposits              Deposit[]
+  expensesPaid          Expense[]     @relation("ExpensePayer")
+  assignedExpenses      Expense[]     @relation("IndividualExpenseTarget")
+  sharedAllocations     SharedExpenseAllocation[]
+  ledgerEntries         MemberLedgerEntry[]
+  closingDetails        MonthlyClosingDetail[]
+  managerAssignments   ManagerAssignment[]
+  adminLogs             AdminPrivilegeLog[]
+  conversations         ConversationParticipant[]
+  sentMessages          Message[]     @relation("SentMessages")
+
+  @@unique([messId, userId])
+  @@index([messId, isActive, isArchived])
+  @@map("mess_members")
+}
+
+model ManagerAssignment {
+  id           String      @id @default(cuid())
+  messId       String
+  memberId     String
+  assignedById String?
+  assignedAt   DateTime    @default(now())
+  endedAt      DateTime?
+  notes        String?
+
+  mess         Mess        @relation(fields: [messId], references: [id], onDelete: Cascade)
+  member       MessMember  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([messId, assignedAt])
+  @@map("manager_assignments")
+}
+
+model AdminPrivilegeLog {
+  id            String      @id @default(cuid())
+  messId        String
+  memberId      String
+  action        String      // "GRANTED", "REVOKED"
+  performedById String?
+  performedAt   DateTime    @default(now())
+  notes         String?
+
+  mess          Mess        @relation(fields: [messId], references: [id], onDelete: Cascade)
+  member        MessMember  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([messId, performedAt])
+  @@map("admin_privilege_logs")
+}
+
+model MonthlyPeriod {
+  id           String         @id @default(cuid())
+  messId       String
+  year         Int
+  month        Int            // 1-12
+  startDate    DateTime
+  endDate      DateTime
+  isClosed     Boolean        @default(false)
+  closedAt     DateTime?
+  closedById   String?
+  reopenedAt   DateTime?
+  reopenedById String?
+  reopenReason String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  mess         Mess           @relation(fields: [messId], references: [id], onDelete: Cascade)
+  mealEntries  MealEntry[]
+  expenses     Expense[]
+  deposits     Deposit[]
+  closing      MonthlyClosing?
+
+  @@unique([messId, year, month])
+  @@index([messId, isClosed])
+  @@map("monthly_periods")
+}
+
+model MealEntry {
+  id          String         @id @default(cuid())
+  messId      String
+  periodId    String
+  memberId    String
+  date        DateTime
+  breakfast   Float          @default(0)
+  lunch       Float          @default(0)
+  dinner      Float          @default(0)
+  totalMeals  Float          @default(0)
+  notes       String?
+  createdById String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  member      MessMember     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  period      MonthlyPeriod  @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, date])
+  @@index([periodId, date])
+  @@index([messId, date])
+  @@map("meal_entries")
+}
+
+model Expense {
+  id               String            @id @default(cuid())
+  messId           String
+  periodId         String
+  date             DateTime
+  title            String
+  description      String?
+  amount           Float
+  expenseType      String            @default("BAZAR") // BAZAR, SHARED, INDIVIDUAL
+  category         String
+  paymentSource    String            @default("MESS_FUND") // PERSONAL, MESS_FUND
+  payerMemberId    String?
+  targetMemberId   String?
+  receiptUrl       String?
+  allocationMethod String?           @default("EQUAL") // EQUAL, CUSTOM, PROPORTIONAL
+  isApproved       Boolean           @default(true)
+  createdById      String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  mess             Mess              @relation(fields: [messId], references: [id], onDelete: Cascade)
+  period           MonthlyPeriod     @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  payerMember      MessMember?       @relation("ExpensePayer", fields: [payerMemberId], references: [id], onDelete: SetNull)
+  targetMember     MessMember?       @relation("IndividualExpenseTarget", fields: [targetMemberId], references: [id], onDelete: SetNull)
+  creator          User?             @relation("ExpenseCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  
+  sharedAllocations SharedExpenseAllocation[]
+
+  @@index([messId, periodId, expenseType])
+  @@index([date])
+  @@map("expenses")
+}
+
+model SharedExpenseAllocation {
+  id              String      @id @default(cuid())
+  expenseId       String
+  memberId        String
+  amount          Float
+  sharePercentage Float?
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  expense         Expense     @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  member          MessMember  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([expenseId, memberId])
+  @@map("shared_expense_allocations")
+}
+
+model Deposit {
+  id            String        @id @default(cuid())
+  messId        String
+  periodId      String
+  memberId      String
+  depositDate   DateTime
+  amount        Float
+  paymentMethod String        @default("CASH") // CASH, BKASH, NAGAD, BANK_TRANSFER, OTHER
+  transactionId String?
+  notes         String?
+  receiptUrl    String?
+  createdById   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  mess          Mess          @relation(fields: [messId], references: [id], onDelete: Cascade)
+  period        MonthlyPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  member        MessMember    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  creator       User?         @relation("DepositCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([messId, periodId])
+  @@index([memberId])
+  @@map("deposits")
+}
+
+model ExpenseCategory {
+  id        String      @id @default(cuid())
+  messId    String
+  name      String
+  nameBn    String?
+  type      String      @default("BAZAR")
+  isDefault Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  mess      Mess        @relation(fields: [messId], references: [id], onDelete: Cascade)
+
+  @@unique([messId, name, type])
+  @@map("expense_categories")
+}
+
+model MemberLedgerEntry {
+  id          String          @id @default(cuid())
+  messId      String
+  memberId    String
+  periodId    String?
+  date        DateTime
+  entryType   String          // OPENING_BALANCE, DEPOSIT, BAZAR_PAYMENT, MEAL_COST, SHARED_EXPENSE, INDIVIDUAL_EXPENSE, ADJUSTMENT, MONTHLY_CLOSING
+  description String
+  debit       Float           @default(0)
+  credit      Float           @default(0)
+  balance     Float
+  referenceId String?
+  createdAt   DateTime        @default(now())
+
+  member      MessMember      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId, date])
+  @@index([messId, periodId])
+  @@map("member_ledger_entries")
+}
+
+model MonthlyClosing {
+  id                     String                 @id @default(cuid())
+  messId                 String
+  periodId               String                 @unique
+  closingDate            DateTime               @default(now())
+  closedById             String
+  totalMeals             Float
+  totalBazarExpense      Float
+  mealRate               Float
+  totalDeposits          Float
+  totalSharedExpenses    Float
+  totalIndividualExpenses Float
+  totalPersonalPayments  Float
+  totalMessFundPayments  Float
+  totalNetDues           Float
+  totalNetAdvances       Float
+  status                 String                 @default("CLOSED")
+  notes                  String?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+
+  mess                   Mess                   @relation(fields: [messId], references: [id], onDelete: Cascade)
+  period                 MonthlyPeriod          @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  details                MonthlyClosingDetail[]
+
+  @@map("monthly_closings")
+}
+
+model MonthlyClosingDetail {
+  id                   String         @id @default(cuid())
+  closingId            String
+  memberId             String
+  totalMeals           Float
+  mealRate             Float
+  mealCost             Float
+  sharedExpenseCost    Float
+  individualExpenseCost Float
+  totalCost            Float
+  deposits             Float
+  personalPayments     Float
+  openingBalance       Float
+  closingBalance       Float
+  isAdvance            Boolean
+  isDue                Boolean
+  createdAt            DateTime       @default(now())
+
+  closing              MonthlyClosing @relation(fields: [closingId], references: [id], onDelete: Cascade)
+  member               MessMember     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([closingId, memberId])
+  @@map("monthly_closing_details")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  messId    String?
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
+  reason    String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  mess      Mess?    @relation(fields: [messId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([messId, createdAt])
+  @@index([action, entity])
+  @@map("audit_logs")
+}
+
+model MessSetting {
+  id                      String   @id @default(cuid())
+  messId                  String   @unique
+  allowFractionalMeals    Boolean  @default(true)
+  defaultAllocationMethod String   @default("EQUAL")
+  autoCarryForwardBalance Boolean  @default(true)
+  lowBalanceThreshold     Float    @default(500.0)
+  language                String   @default("en")
+  timezone                String   @default("Asia/Dhaka")
+  currency                String   @default("BDT")
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  mess                    Mess     @relation(fields: [messId], references: [id], onDelete: Cascade)
+
+  @@map("mess_settings")
+}
+
+model MessProfile {
+  id               String    @id @default(cuid())
+  messId           String    @unique
+  messName         String
+  logoUrl          String?
+  coverUrl         String?
+  fullAddress      String?
+  location         String?
+  contactPhone     String?
+  email            String?
+  description      String?
+  establishedDate  DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  mess             Mess      @relation(fields: [messId], references: [id], onDelete: Cascade)
+
+  @@map("mess_profiles")
+}
+
+model Notice {
+  id            String       @id @default(cuid())
+  messId        String
+  title         String
+  content       String
+  category      String       @default("GENERAL") // BAZAR_LIST, MEAL_SCHEDULE, SHOPPING_REQ, EXPENSES, ANNOUNCEMENT, MESS_RULES, MAINTENANCE, EMERGENCY, GENERAL
+  isPinned      Boolean      @default(false)
+  month         Int?
+  year          Int?
+  publishedAt   DateTime     @default(now())
+  expiresAt     DateTime?
+  isArchived    Boolean      @default(false)
+  attachmentUrl String?
+  createdById   String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  mess          Mess         @relation(fields: [messId], references: [id], onDelete: Cascade)
+  creator       User?        @relation("NoticeCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([messId, isArchived, publishedAt])
+  @@index([messId, month, year])
+  @@map("notices")
+}
+
+model Conversation {
+  id           String                    @id @default(cuid())
+  messId       String
+  isGroup      Boolean                   @default(false)
+  title        String?
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+
+  mess         Mess                      @relation(fields: [messId], references: [id], onDelete: Cascade)
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([messId, updatedAt])
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversationId String
+  memberId       String
+  lastReadAt     DateTime     @default(now())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  member         MessMember   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, memberId])
+  @@index([memberId])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderMemberId String
+  content        String
+  attachmentUrl  String?
+  isDeleted      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         MessMember   @relation("SentMessages", fields: [senderMemberId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
