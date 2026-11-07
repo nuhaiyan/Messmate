@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Sidebar } from './sidebar';
 import { Header, MemberOption } from './header';
-import { MobileTopNav } from './mobile-top-nav';
+import { BottomNav } from './bottom-nav';
 import { I18nProvider } from '@/lib/i18n/context';
 
 interface DashboardShellProps {
@@ -97,12 +97,12 @@ export function DashboardShell({
             primaryAdminName={primaryAdminName}
           />
 
-          {/* Sticky Mobile Top Navigation (under Header, avoiding any bottom banner conflicts) */}
-          <MobileTopNav isAdminOrManager={isPrimaryAdmin || isAdmin || isManager} />
-
-          <main className="flex-1 p-3.5 sm:p-5 md:p-8 max-w-7xl w-full mx-auto min-w-0 pb-8">
+          <main className="flex-1 p-3.5 sm:p-5 md:p-8 max-w-7xl w-full mx-auto min-w-0 pb-28 md:pb-8">
             {children}
           </main>
+
+          {/* Square Shape Mobile Bottom Navigation Bar */}
+          <BottomNav isAdminOrManager={isPrimaryAdmin || isAdmin || isManager} />
         </div>
       </div>
     </I18nProvider>

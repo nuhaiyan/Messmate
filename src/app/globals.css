@@ -68,6 +68,15 @@ body {
   scrollbar-width: none;
 }
 
+/* Ensure hosting badges do not cover the bottom navigation bar */
+[data-netlify-badge],
+.netlify-badge,
+#netlify-badge,
+div:has(> a[href*="netlify.com"]) {
+  bottom: 84px !important;
+  z-index: 40 !important;
+}
+
 /* Print Stylesheet for Reports & Statements */
 @media print {
   aside, nav, .no-print {
