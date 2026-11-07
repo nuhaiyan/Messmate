@@ -323,3 +323,40 @@ export async function updateMemberMealEntryAction(data: {
     },
   };
 }
+
+export async function toggleBreakfastSettingAction(includeBreakfast: boolean) {
+  const session = await requireAuth();
+  const isManagement = session.isPrimaryAdmin || session.isAdmin || session.isManager;
+  if (!isManagement) {
+    return { success: false, error: 'Unauthorized: Only Managers and Admins can configure meal settings.' };
+  }
+
+  await prisma.messSetting.upsert({
+    where: { messId: session.messId },
+    update: { includeBreakfast },
+    create: {
+      messId: session.messId,
+      includeBreakfast,
+    },
+  });
+
+  safeRevalidate('/meals');
+  safeRevalidate('/profile');
+  safeRevalidate('/dashboard');
+  safeRevalidate('/reports');
+
+  return { success: true, includeBreakfast };
+}
+
+export async function getBreakfastSettingAction() {
+  try {
+    const session = await requireAuth();
+    const setting = await prisma.messSetting.findUnique({
+      where: { messId: session.messId },
+      select: { includeBreakfast: true },
+    });
+    return setting?.includeBreakfast ?? false;
+  } catch {
+    return false;
+  }
+}

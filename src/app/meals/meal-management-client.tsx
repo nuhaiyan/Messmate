@@ -12,10 +12,11 @@ import {
   TrendingUp,
   Clock,
   Sparkles,
+  Coffee,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { saveBulkMealsAction, copyPreviousDayMealsAction } from '@/app/actions/meals';
+import { saveBulkMealsAction, copyPreviousDayMealsAction, toggleBreakfastSettingAction } from '@/app/actions/meals';
 
 interface MemberMealRow {
   memberId: string;
@@ -32,24 +33,65 @@ export function MealManagementClient({
   initialMeals,
   isManager,
   isClosed,
+  initialIncludeBreakfast = false,
 }: {
   selectedDate: string;
   initialMeals: MemberMealRow[];
   isManager: boolean;
   isClosed: boolean;
+  initialIncludeBreakfast?: boolean;
 }) {
   const router = useRouter();
   const [date, setDate] = useState(selectedDate);
+  const [includeBreakfast, setIncludeBreakfast] = useState(initialIncludeBreakfast);
+  const [isTogglingBreakfast, setIsTogglingBreakfast] = useState(false);
   const [mealsState, setMealsState] = useState<Record<string, { b: number; l: number; d: number }>>(() => {
     const init: Record<string, { b: number; l: number; d: number }> = {};
     for (const m of initialMeals) {
-      init[m.memberId] = { b: m.breakfast, l: m.lunch, d: m.dinner };
+      init[m.memberId] = { b: initialIncludeBreakfast ? m.breakfast : 0, l: m.lunch, d: m.dinner };
     }
     return init;
   });
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleToggleBreakfast = async () => {
+    if (!isManager) return;
+    setIsTogglingBreakfast(true);
+    const nextVal = !includeBreakfast;
+    try {
+      const res = await toggleBreakfastSettingAction(nextVal);
+      if (res.success) {
+        setIncludeBreakfast(nextVal);
+        if (!nextVal) {
+          // Zero out breakfast for all members
+          setMealsState((prev) => {
+            const next = { ...prev };
+            for (const key of Object.keys(next)) {
+              next[key] = { ...next[key], b: 0 };
+            }
+            return next;
+          });
+          setMessage({
+            type: 'success',
+            text: 'সকালের নাস্তা মিল সিস্টেম থেকে বাদ দেওয়া হয়েছে (Breakfast disabled in meal system).',
+          });
+        } else {
+          setMessage({
+            type: 'success',
+            text: 'সকালের নাস্তা মিল সিস্টেমে অন্তর্ভুক্ত করা হয়েছে (Breakfast enabled in meal system).',
+          });
+        }
+      } else {
+        setMessage({ type: 'error', text: res.error || 'Failed to update breakfast setting.' });
+      }
+    } catch (err: unknown) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Error updating breakfast.' });
+    } finally {
+      setIsTogglingBreakfast(false);
+    }
+  };
 
   const handleDateChange = (newDate: string) => {
     setDate(newDate);
@@ -113,14 +155,18 @@ export function MealManagementClient({
   };
 
   // Quick preset helper
-  const setPreset = (type: 'all_full' | 'lunch_dinner' | 'all_zero') => {
+  const setPreset = (type: 'all_full' | 'lunch_dinner' | 'lunch_only' | 'dinner_only' | 'all_zero') => {
     if (!isManager || isClosed) return;
     const next = { ...mealsState };
     for (const m of initialMeals) {
       if (type === 'all_full') {
-        next[m.memberId] = { b: 1, l: 1, d: 1 };
+        next[m.memberId] = { b: includeBreakfast ? 1 : 0, l: 1, d: 1 };
       } else if (type === 'lunch_dinner') {
         next[m.memberId] = { b: 0, l: 1, d: 1 };
+      } else if (type === 'lunch_only') {
+        next[m.memberId] = { b: 0, l: 1, d: 0 };
+      } else if (type === 'dinner_only') {
+        next[m.memberId] = { b: 0, l: 0, d: 1 };
       } else {
         next[m.memberId] = { b: 0, l: 0, d: 0 };
       }
@@ -134,7 +180,7 @@ export function MealManagementClient({
   let dailyDn = 0;
   for (const m of initialMeals) {
     const row = mealsState[m.memberId] || { b: 0, l: 0, d: 0 };
-    dailyBf += row.b;
+    dailyBf += includeBreakfast ? row.b : 0;
     dailyLn += row.l;
     dailyDn += row.d;
   }
@@ -145,16 +191,53 @@ export function MealManagementClient({
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Daily Meal Management
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <Utensils className="w-5 h-5 text-emerald-600" />
+            <span>Daily Meal Management (দৈনিক মিল)</span>
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            Bulk meal entry for Breakfast, Lunch &amp; Dinner with fractional 0.5 support
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            {includeBreakfast
+              ? 'Bulk meal entry for Breakfast, Lunch & Dinner with 0.5 support'
+              : 'Bulk meal entry for Lunch & Dinner (Breakfast is currently disabled for this mess)'}
           </p>
         </div>
 
-        {/* Date Selector & Action buttons */}
+        {/* Date Selector, Breakfast Switch & Action buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Breakfast System Toggle Switch */}
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 shadow-2xs">
+            <Coffee className={`w-3.5 h-3.5 ${includeBreakfast ? 'text-amber-500' : 'text-slate-400'}`} />
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 hidden sm:inline">
+              Breakfast:
+            </span>
+            <button
+              type="button"
+              onClick={handleToggleBreakfast}
+              disabled={!isManager || isTogglingBreakfast}
+              title={
+                includeBreakfast
+                  ? 'Breakfast is ON in meal system. Click to turn OFF.'
+                  : 'Breakfast is OFF in meal system. Click to turn ON.'
+              }
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                includeBreakfast ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'
+              } ${!isManager ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                  includeBreakfast ? 'translate-x-4' : 'translate-x-0'
+                }`}
+              />
+            </button>
+            <span
+              className={`text-[11px] font-bold ${
+                includeBreakfast ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'
+              }`}
+            >
+              {includeBreakfast ? 'ON' : 'OFF'}
+            </span>
+          </div>
+
           <div className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 shadow-2xs">
             <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <input
@@ -175,13 +258,13 @@ export function MealManagementClient({
                 className="flex items-center gap-1.5"
               >
                 <Copy className="w-3.5 h-3.5" />
-                Copy Yesterday
+                <span className="hidden sm:inline">Copy Yesterday</span>
               </Button>
               <Button
                 size="sm"
                 onClick={handleSave}
                 disabled={loading}
-                className="flex items-center gap-1.5"
+                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 <Save className="w-3.5 h-3.5" />
                 {loading ? 'Saving...' : 'Save Meals'}
@@ -217,35 +300,62 @@ export function MealManagementClient({
 
       {/* Preset Toolbar (Manager Only) */}
       {isManager && !isClosed && (
-        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 flex-wrap">
           <span className="font-semibold text-slate-700 dark:text-slate-200">Quick Presets:</span>
-          <button
-            onClick={() => setPreset('all_full')}
-            className="px-2 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer font-medium"
-          >
-            All Full (1, 1, 1)
-          </button>
-          <button
-            onClick={() => setPreset('lunch_dinner')}
-            className="px-2 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer font-medium"
-          >
-            Lunch &amp; Dinner (0, 1, 1)
-          </button>
+          {includeBreakfast ? (
+            <>
+              <button
+                onClick={() => setPreset('all_full')}
+                className="px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer font-medium"
+              >
+                All Full (1, 1, 1)
+              </button>
+              <button
+                onClick={() => setPreset('lunch_dinner')}
+                className="px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer font-medium"
+              >
+                Lunch &amp; Dinner (0, 1, 1)
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setPreset('all_full')}
+                className="px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer font-medium"
+              >
+                Full Day (Lunch 1, Dinner 1)
+              </button>
+              <button
+                onClick={() => setPreset('lunch_only')}
+                className="px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer font-medium"
+              >
+                Lunch Only (1, 0)
+              </button>
+              <button
+                onClick={() => setPreset('dinner_only')}
+                className="px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer font-medium"
+              >
+                Dinner Only (0, 1)
+              </button>
+            </>
+          )}
           <button
             onClick={() => setPreset('all_zero')}
-            className="px-2 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer font-medium"
+            className="px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer font-medium"
           >
-            Clear All (0, 0, 0)
+            Clear All (0, 0)
           </button>
         </div>
       )}
 
       {/* Daily Summary Pill Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xs">
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Breakfast Total</p>
-          <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{dailyBf}</p>
-        </div>
+      <div className={`grid gap-3 ${includeBreakfast ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-1 sm:grid-cols-3'}`}>
+        {includeBreakfast && (
+          <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xs">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Breakfast Total</p>
+            <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{dailyBf}</p>
+          </div>
+        )}
         <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xs">
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Lunch Total</p>
           <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{dailyLn}</p>
@@ -269,7 +379,7 @@ export function MealManagementClient({
                 <tr>
                   <th className="py-3 px-4">Member Name</th>
                   <th className="py-3 px-4">Room</th>
-                  <th className="py-3 px-4 text-center">Breakfast</th>
+                  {includeBreakfast && <th className="py-3 px-4 text-center">Breakfast</th>}
                   <th className="py-3 px-4 text-center">Lunch</th>
                   <th className="py-3 px-4 text-center">Dinner</th>
                   <th className="py-3 px-4 text-center font-bold">Today Total</th>
@@ -279,7 +389,7 @@ export function MealManagementClient({
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {initialMeals.map((m) => {
                   const current = mealsState[m.memberId] || { b: 0, l: 0, d: 0 };
-                  const rowTotal = current.b + current.l + current.d;
+                  const rowTotal = (includeBreakfast ? current.b : 0) + current.l + current.d;
 
                   return (
                     <tr key={m.memberId} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
@@ -290,28 +400,30 @@ export function MealManagementClient({
                         {m.roomNumber || '—'}
                       </td>
 
-                      {/* Breakfast Input */}
-                      <td className="py-2.5 px-4 text-center">
-                        <input
-                          type="number"
-                          step="0.5"
-                          min="0"
-                          max="99"
-                          disabled={!isManager || isClosed}
-                          value={current.b === 0 ? 0 : current.b}
-                          onFocus={(e) => e.target.select()}
-                          onChange={(e) => {
-                            const val = parseFloat(e.target.value);
-                            handleMealChange(m.memberId, 'b', isNaN(val) ? 0 : Math.max(0, val));
-                          }}
-                          aria-label={`Breakfast for ${m.fullName}`}
-                          className={`w-16 py-1 px-1.5 text-center rounded-lg border text-xs font-bold transition-all focus:outline-hidden focus:ring-2 focus:ring-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed ${
-                            current.b > 0
-                              ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-400 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200'
-                              : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'
-                          }`}
-                        />
-                      </td>
+                      {/* Breakfast Input (Only shown if includeBreakfast is ON) */}
+                      {includeBreakfast && (
+                        <td className="py-2.5 px-4 text-center">
+                          <input
+                            type="number"
+                            step="0.5"
+                            min="0"
+                            max="99"
+                            disabled={!isManager || isClosed}
+                            value={current.b === 0 ? 0 : current.b}
+                            onFocus={(e) => e.target.select()}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              handleMealChange(m.memberId, 'b', isNaN(val) ? 0 : Math.max(0, val));
+                            }}
+                            aria-label={`Breakfast for ${m.fullName}`}
+                            className={`w-16 py-1 px-1.5 text-center rounded-lg border text-xs font-bold transition-all focus:outline-hidden focus:ring-2 focus:ring-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed ${
+                              current.b > 0
+                                ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-400 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200'
+                                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'
+                            }`}
+                          />
+                        </td>
+                      )}
 
                       {/* Lunch Input */}
                       <td className="py-2.5 px-4 text-center">

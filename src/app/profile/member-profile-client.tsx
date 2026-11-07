@@ -154,6 +154,7 @@ interface MemberProfileClientProps {
   recentExpenses: ExpenseRecord[];
   isOwnProfile: boolean;
   canEdit: boolean;
+  includeBreakfast?: boolean;
   currentMonth: number;
   currentYear: number;
 }
@@ -169,6 +170,7 @@ export function MemberProfileClient({
   recentExpenses,
   isOwnProfile,
   canEdit,
+  includeBreakfast = false,
   currentMonth,
   currentYear,
 }: MemberProfileClientProps) {
@@ -510,9 +512,11 @@ export function MemberProfileClient({
               )}
             </div>
 
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {member.bio || 'Member of MessMate bachelor mess community.'}
-            </p>
+            {member.bio?.trim() && (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {member.bio.trim()}
+              </p>
+            )}
 
             <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400 pt-1 flex-wrap">
               <span className="flex items-center gap-1">
@@ -571,7 +575,9 @@ export function MemberProfileClient({
                 {t.mealEntry?.title || 'Submit Daily Meals'}
               </h2>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                {t.mealEntry?.subtitle || 'Enter your daily breakfast, lunch, and dinner quantity'}
+                {includeBreakfast
+                  ? (t.mealEntry?.subtitle || 'Enter your daily breakfast, lunch, and dinner quantity')
+                  : 'Enter your daily lunch and dinner quantity'}
               </p>
             </div>
 
@@ -583,19 +589,21 @@ export function MemberProfileClient({
                 className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100 focus:outline-emerald-500 font-medium"
               />
 
-              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs shadow-2xs focus-within:ring-2 focus-within:ring-emerald-500/50">
-                <span className="text-slate-700 dark:text-slate-200 font-bold">{t.mealEntry?.breakfast || 'BF'}:</span>
-                <input
-                  type="number"
-                  step="0.5"
-                  min="0"
-                  max="99"
-                  value={entryBf}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => setEntryBf(parseFloat(e.target.value) || 0)}
-                  className="w-12 text-center font-extrabold text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md py-0.5 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
-                />
-              </div>
+              {includeBreakfast && (
+                <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs shadow-2xs focus-within:ring-2 focus-within:ring-emerald-500/50">
+                  <span className="text-slate-700 dark:text-slate-200 font-bold">{t.mealEntry?.breakfast || 'BF'}:</span>
+                  <input
+                    type="number"
+                    step="0.5"
+                    min="0"
+                    max="99"
+                    value={entryBf}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setEntryBf(parseFloat(e.target.value) || 0)}
+                    className="w-12 text-center font-extrabold text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md py-0.5 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+              )}
 
               <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs shadow-2xs focus-within:ring-2 focus-within:ring-emerald-500/50">
                 <span className="text-slate-700 dark:text-slate-200 font-bold">{t.mealEntry?.lunch || 'LN'}:</span>
@@ -746,7 +754,9 @@ export function MemberProfileClient({
                   {accounting.totalMeals} <span className="text-sm font-semibold text-slate-500">টি</span>
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  সকাল: {accounting.breakfast} | দুপুর: {accounting.lunch} | রাত: {accounting.dinner}
+                  {includeBreakfast
+                    ? `সকাল: ${accounting.breakfast} | দুপুর: ${accounting.lunch} | রাত: ${accounting.dinner}`
+                    : `দুপুর: ${accounting.lunch} | রাত: ${accounting.dinner}`}
                 </p>
               </div>
 
@@ -1137,7 +1147,7 @@ export function MemberProfileClient({
                 <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="py-2.5 px-3">Date</th>
-                    <th className="py-2.5 px-3 text-center">Breakfast</th>
+                    {includeBreakfast && <th className="py-2.5 px-3 text-center">Breakfast</th>}
                     <th className="py-2.5 px-3 text-center">Lunch</th>
                     <th className="py-2.5 px-3 text-center">Dinner</th>
                     <th className="py-2.5 px-3 text-right">Total Meals</th>
@@ -1147,7 +1157,7 @@ export function MemberProfileClient({
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {meals.length === 0 ? (
                     <tr>
-                      <td colSpan={isOwnProfile || canEdit ? 6 : 5} className="py-6 text-center text-slate-400">
+                      <td colSpan={isOwnProfile || canEdit ? (includeBreakfast ? 6 : 5) : (includeBreakfast ? 5 : 4)} className="py-6 text-center text-slate-400">
                         No meal records found for this month.
                       </td>
                     </tr>
@@ -1157,7 +1167,9 @@ export function MemberProfileClient({
                         <td className="py-2.5 px-3 font-medium text-slate-800 dark:text-slate-200">
                           {formatDate(m.date)}
                         </td>
-                        <td className="py-2.5 px-3 text-center text-slate-600 dark:text-slate-400">{m.breakfast}</td>
+                        {includeBreakfast && (
+                          <td className="py-2.5 px-3 text-center text-slate-600 dark:text-slate-400">{m.breakfast}</td>
+                        )}
                         <td className="py-2.5 px-3 text-center text-slate-600 dark:text-slate-400">{m.lunch}</td>
                         <td className="py-2.5 px-3 text-center text-slate-600 dark:text-slate-400">{m.dinner}</td>
                         <td className="py-2.5 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
@@ -1693,22 +1705,24 @@ export function MemberProfileClient({
                 </div>
               )}
 
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Breakfast
-                  </label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    max="99"
-                    value={editMealBf}
-                    onFocus={(e) => e.target.select()}
-                    onChange={(e) => setEditMealBf(parseFloat(e.target.value) || 0)}
-                    className="w-full text-center px-2 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-extrabold text-slate-900 dark:text-white focus:outline-emerald-500"
-                  />
-                </div>
+              <div className={`grid gap-3 ${includeBreakfast ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                {includeBreakfast && (
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      Breakfast
+                    </label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      max="99"
+                      value={editMealBf}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) => setEditMealBf(parseFloat(e.target.value) || 0)}
+                      className="w-full text-center px-2 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-extrabold text-slate-900 dark:text-white focus:outline-emerald-500"
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-1">
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">

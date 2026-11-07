@@ -11,7 +11,8 @@ import {
   AlertTriangle,
   Megaphone,
   ChevronDown,
-  Receipt,
+  User,
+  Sparkles,
 } from 'lucide-react';
 
 interface QuickActionsMenuProps {
@@ -19,7 +20,7 @@ interface QuickActionsMenuProps {
   activeMemberId?: string;
 }
 
-export function QuickActionsMenu({ isManagement }: QuickActionsMenuProps) {
+export function QuickActionsMenu({ isManagement, activeMemberId }: QuickActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -35,51 +36,59 @@ export function QuickActionsMenu({ isManagement }: QuickActionsMenuProps) {
 
   const actions = [
     {
-      title: 'Submit Daily Meal',
-      description: 'Record BF, LN, DN meals',
+      title: 'Submit Daily Meal (মিল এন্ট্রি)',
+      description: 'Record daily consumed meals',
       href: '/meals',
       icon: Utensils,
       color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40',
       allowed: true,
     },
     {
-      title: 'Create Bazar Schedule',
-      description: 'Assign date range to member',
-      href: '/bazar?tab=schedule',
-      icon: Calendar,
-      color: 'text-amber-600 bg-amber-50 dark:bg-amber-950/40',
-      allowed: isManagement,
+      title: 'My Profile & Balance (আমার প্রোফাইল)',
+      description: 'View 9 overview cards & ledger',
+      href: '/profile',
+      icon: User,
+      color: 'text-sky-600 bg-sky-50 dark:bg-sky-950/40',
+      allowed: true,
     },
     {
-      title: 'Add Bazar Expense',
-      description: 'Record grocery purchase',
+      title: 'Bazar Schedule (বাজার শিডিউল)',
+      description: 'Check assigned date ranges',
+      href: '/bazar',
+      icon: Calendar,
+      color: 'text-amber-600 bg-amber-50 dark:bg-amber-950/40',
+      allowed: true,
+    },
+    {
+      title: 'Mess Notices (মেস নোটিশ)',
+      description: 'View latest announcements',
+      href: '/notices',
+      icon: Megaphone,
+      color: 'text-purple-600 bg-purple-50 dark:bg-purple-950/40',
+      allowed: true,
+    },
+    {
+      title: 'Add Bazar Expense (বাজার খরচ)',
+      description: 'Record grocery purchase payment',
       href: '/bazar?tab=expenses',
       icon: ShoppingCart,
       color: 'text-orange-600 bg-orange-50 dark:bg-orange-950/40',
       allowed: isManagement,
     },
     {
-      title: 'Record Member Deposit',
-      description: 'Add money to mess fund',
+      title: 'Record Deposit (টাকা জমা)',
+      description: 'Credit member money to mess fund',
       href: '/deposits',
       icon: Wallet,
       color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40',
       allowed: isManagement,
     },
     {
-      title: 'Issue Member Fine',
-      description: 'Charge fine to member account',
+      title: 'Issue Fine (জরিমানা নির্ধারণ)',
+      description: 'Record fine for mess rule breach',
       href: '/finance',
       icon: AlertTriangle,
       color: 'text-rose-600 bg-rose-50 dark:bg-rose-950/40',
-      allowed: isManagement,
-    },
-    {
-      title: 'Publish Notice',
-      description: 'Post to mess billboard',
-      href: '/notices',
-      icon: Megaphone,
-      color: 'text-sky-600 bg-sky-50 dark:bg-sky-950/40',
       allowed: isManagement,
     },
   ];
@@ -90,8 +99,9 @@ export function QuickActionsMenu({ isManagement }: QuickActionsMenuProps) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition-all cursor-pointer shrink-0"
+        className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition-all cursor-pointer shrink-0"
         aria-expanded={isOpen}
+        title="Quick Actions & Shortcuts (দ্রুত অ্যাকশন)"
       >
         <Plus className="w-3.5 h-3.5" />
         <span className="hidden sm:inline">Quick Action</span>
@@ -99,14 +109,18 @@ export function QuickActionsMenu({ isManagement }: QuickActionsMenuProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 p-2 animate-in fade-in zoom-in-95 duration-150">
-          <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Authorized Shortcuts
+        <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 p-2 animate-in fade-in zoom-in-95 duration-150">
+          <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800 mb-1 flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-orange-500" />
+              Quick Actions (শর্টকাট)
+            </span>
+            <span className="text-[10px] text-slate-400 font-semibold uppercase">
+              {isManagement ? 'Manager' : 'Member'}
             </span>
           </div>
 
-          <div className="space-y-0.5">
+          <div className="space-y-0.5 max-h-[70vh] overflow-y-auto">
             {visibleActions.map((act) => {
               const Icon = act.icon;
               return (

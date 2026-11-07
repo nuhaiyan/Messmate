@@ -65,6 +65,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         recentExpenses={data.recentExpenses}
         isOwnProfile={data.isOwnProfile}
         canEdit={data.canEdit}
+        includeBreakfast={data.includeBreakfast}
         currentMonth={data.currentMonth}
         currentYear={data.currentYear}
       />

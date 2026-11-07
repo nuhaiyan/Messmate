@@ -55,6 +55,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const accountingData = await getMonthAccountingData(session.messId, currentYear, currentMonth);
   const result = accountingData.calculationResult;
 
+  const messSetting = await prisma.messSetting.findUnique({
+    where: { messId: session.messId },
+    select: { includeBreakfast: true },
+  });
+  const includeBreakfast = messSetting?.includeBreakfast ?? false;
+
   // 2. Compute today's meals
   const today = new Date('2026-11-07T12:00:00Z');
   const todayMealsRecords = await prisma.mealEntry.findMany({
@@ -360,6 +366,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           deposits={depositItems}
           additionalExpenses={additionalExpenseItems}
           memberBalances={memberBalanceItems}
+          includeBreakfast={includeBreakfast}
         />
       </div>
 

@@ -148,7 +148,14 @@ export async function getMemberProfileDataAction(params?: {
   const isOwnProfile = session.memberId === targetMemberId;
   const canEdit = isOwnProfile || session.isPrimaryAdmin || session.isAdmin || session.isManager;
 
+  const messSetting = await prisma.messSetting.findUnique({
+    where: { messId: session.messId },
+    select: { includeBreakfast: true },
+  });
+  const includeBreakfast = messSetting?.includeBreakfast ?? false;
+
   return {
+    includeBreakfast,
     member: {
       id: member.id,
       fullName: member.fullName,

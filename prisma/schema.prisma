@@ -435,6 +435,7 @@ model AuditLog {
 model MessSetting {
   id                      String   @id @default(cuid())
   messId                  String   @unique
+  includeBreakfast        Boolean  @default(false)
   allowFractionalMeals    Boolean  @default(true)
   defaultAllocationMethod String   @default("EQUAL")
   autoCarryForwardBalance Boolean  @default(true)

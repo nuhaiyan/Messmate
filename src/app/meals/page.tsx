@@ -31,6 +31,12 @@ export default async function MealsPage({ searchParams }: MealsPageProps) {
     include: { profile: true },
   });
 
+  const messSetting = await prisma.messSetting.findUnique({
+    where: { messId: session.messId },
+    select: { includeBreakfast: true },
+  });
+  const includeBreakfast = messSetting?.includeBreakfast ?? false;
+
   const messName = mess?.profile?.messName || mess?.name || "Tarek's Residence";
   const messLogoUrl = mess?.profile?.logoUrl || mess?.logoUrl || null;
 
@@ -122,6 +128,7 @@ export default async function MealsPage({ searchParams }: MealsPageProps) {
         initialMeals={initialMeals}
         isManager={canManageMeals}
         isClosed={isClosed}
+        initialIncludeBreakfast={includeBreakfast}
       />
     </DashboardShell>
   );

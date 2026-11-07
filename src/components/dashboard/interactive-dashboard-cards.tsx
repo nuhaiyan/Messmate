@@ -157,6 +157,7 @@ interface InteractiveDashboardCardsProps {
   deposits: DepositItem[];
   additionalExpenses: AdditionalExpenseItem[];
   memberBalances: DueAdvanceItem[];
+  includeBreakfast?: boolean;
 }
 
 export function InteractiveDashboardCards({
@@ -172,6 +173,7 @@ export function InteractiveDashboardCards({
   deposits,
   additionalExpenses,
   memberBalances,
+  includeBreakfast = false,
 }: InteractiveDashboardCardsProps) {
   const router = useRouter();
   const { language, t } = useI18n();
@@ -888,7 +890,7 @@ export function InteractiveDashboardCards({
                         <tr>
                           <th className="px-4 py-3">{language === 'bn' ? 'সদস্য' : 'Member'}</th>
                           <th className="px-4 py-3">{language === 'bn' ? 'রুম' : 'Room'}</th>
-                          <th className="px-4 py-3 text-center">{language === 'bn' ? 'সকাল' : 'Breakfast'}</th>
+                          {includeBreakfast && <th className="px-4 py-3 text-center">{language === 'bn' ? 'সকাল' : 'Breakfast'}</th>}
                           <th className="px-4 py-3 text-center">{language === 'bn' ? 'দুপুর' : 'Lunch'}</th>
                           <th className="px-4 py-3 text-center">{language === 'bn' ? 'রাত' : 'Dinner'}</th>
                           <th className="px-4 py-3 text-right">{language === 'bn' ? 'দৈনিক মোট' : "Today's Total"}</th>
@@ -902,26 +904,28 @@ export function InteractiveDashboardCards({
 
                             {isEditingMeals ? (
                               <>
-                                <td className="px-4 py-2 text-center">
-                                  <input
-                                    type="number"
-                                    step="0.5"
-                                    min="0"
-                                    max="5"
-                                    value={m.breakfast}
-                                    onChange={(e) => {
-                                      const val = parseFloat(e.target.value) || 0;
-                                      const next = [...editingTodayMeals];
-                                      next[idx] = {
-                                        ...next[idx],
-                                        breakfast: val,
-                                        total: val + next[idx].lunch + next[idx].dinner,
-                                      };
-                                      setEditingTodayMeals(next);
-                                    }}
-                                    className="w-16 px-2 py-1 text-center border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded font-bold text-slate-900 dark:text-slate-100"
-                                  />
-                                </td>
+                                {includeBreakfast && (
+                                  <td className="px-4 py-2 text-center">
+                                    <input
+                                      type="number"
+                                      step="0.5"
+                                      min="0"
+                                      max="5"
+                                      value={m.breakfast}
+                                      onChange={(e) => {
+                                        const val = parseFloat(e.target.value) || 0;
+                                        const next = [...editingTodayMeals];
+                                        next[idx] = {
+                                          ...next[idx],
+                                          breakfast: val,
+                                          total: val + next[idx].lunch + next[idx].dinner,
+                                        };
+                                        setEditingTodayMeals(next);
+                                      }}
+                                      className="w-16 px-2 py-1 text-center border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded font-bold text-slate-900 dark:text-slate-100"
+                                    />
+                                  </td>
+                                )}
                                 <td className="px-4 py-2 text-center">
                                   <input
                                     type="number"
@@ -935,7 +939,7 @@ export function InteractiveDashboardCards({
                                       next[idx] = {
                                         ...next[idx],
                                         lunch: val,
-                                        total: next[idx].breakfast + val + next[idx].dinner,
+                                        total: (includeBreakfast ? next[idx].breakfast : 0) + val + next[idx].dinner,
                                       };
                                       setEditingTodayMeals(next);
                                     }}
@@ -955,7 +959,7 @@ export function InteractiveDashboardCards({
                                       next[idx] = {
                                         ...next[idx],
                                         dinner: val,
-                                        total: next[idx].breakfast + next[idx].lunch + val,
+                                        total: (includeBreakfast ? next[idx].breakfast : 0) + next[idx].lunch + val,
                                       };
                                       setEditingTodayMeals(next);
                                     }}
@@ -965,7 +969,7 @@ export function InteractiveDashboardCards({
                               </>
                             ) : (
                               <>
-                                <td className="px-4 py-3 text-center font-mono font-medium">{m.breakfast}</td>
+                                {includeBreakfast && <td className="px-4 py-3 text-center font-mono font-medium">{m.breakfast}</td>}
                                 <td className="px-4 py-3 text-center font-mono font-medium">{m.lunch}</td>
                                 <td className="px-4 py-3 text-center font-mono font-medium">{m.dinner}</td>
                               </>

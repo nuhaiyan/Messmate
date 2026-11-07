@@ -88,6 +88,7 @@ export default async function MemberDetailPage({ params, searchParams }: MemberD
         recentExpenses={profileData.recentExpenses}
         isOwnProfile={session.memberId === id}
         canEdit={session.isPrimaryAdmin || session.isAdmin || session.isManager || session.memberId === id}
+        includeBreakfast={profileData.includeBreakfast}
         currentMonth={selectedMonth}
         currentYear={selectedYear}
       />

@@ -413,8 +413,8 @@ export function MemberManagementClient({
             <Users className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
             <span>Members &amp; Role Management</span>
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            14 preloaded bachelor mess members, dynamic manager assignments, and role delegation.
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Directory and role management for mess members.
           </p>
         </div>
 
@@ -441,55 +441,47 @@ export function MemberManagementClient({
         </div>
       </div>
 
-      {/* Summary Role Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Summary Role Cards - Clean & Compact */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {/* Permanent Primary Admin Card */}
-        <div className="p-4 rounded-xl bg-linear-to-br from-amber-500/10 via-amber-50/60 to-white dark:from-amber-950/40 dark:via-slate-900 dark:to-slate-900 border border-amber-200/80 dark:border-amber-800/60 shadow-2xs">
-          <div className="flex items-center justify-between mb-2">
+        <div className="p-3.5 rounded-xl bg-linear-to-br from-amber-500/10 via-amber-50/60 to-white dark:from-amber-950/40 dark:via-slate-900 dark:to-slate-900 border border-amber-200/80 dark:border-amber-800/60 shadow-2xs">
+          <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-              <Crown className="w-4 h-4 text-amber-600 dark:text-amber-400" /> Permanent Primary Admin
+              <Crown className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> Primary Admin
             </span>
             <span className="text-[10px] font-bold bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded-full">
-              Level 1
+              Admin
             </span>
           </div>
           <p className="text-base font-bold text-slate-900 dark:text-slate-100">{primaryAdmin?.fullName || 'Mohammad Tarek Hossen'}</p>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-            Permanent supreme authority. Cannot be removed, demoted or replaced by any user.
-          </p>
         </div>
 
         {/* Current Manager Card */}
-        <div className="p-4 rounded-xl bg-linear-to-br from-emerald-500/10 via-emerald-50/60 to-white dark:from-emerald-950/40 dark:via-slate-900 dark:to-slate-900 border border-emerald-200/80 dark:border-emerald-800/60 shadow-2xs">
-          <div className="flex items-center justify-between mb-2">
+        <div className="p-3.5 rounded-xl bg-linear-to-br from-emerald-500/10 via-emerald-50/60 to-white dark:from-emerald-950/40 dark:via-slate-900 dark:to-slate-900 border border-emerald-200/80 dark:border-emerald-800/60 shadow-2xs">
+          <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Current Manager
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Current Manager
             </span>
             <span className="text-[10px] font-bold bg-emerald-200 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200 px-2 py-0.5 rounded-full">
-              Level 3
+              Manager
             </span>
           </div>
           <p className="text-base font-bold text-slate-900 dark:text-slate-100">{currentManager?.fullName || 'Tanvir'}</p>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-            Full operational authority over daily meals, bazar expenses, deposits, and closing.
-          </p>
         </div>
 
         {/* Member Metrics Card */}
-        <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
-          <div className="flex items-center justify-between mb-2">
+        <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-              <Users className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Member Statuses
+              <Users className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /> Member Statuses
             </span>
             <span className="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-full">
               Total {totalCount}
             </span>
           </div>
-          <div className="flex items-center gap-4 text-xs font-medium mt-2">
-            <span className="text-emerald-700 dark:text-emerald-400">● {activeCount} Active</span>
-            <span className="text-amber-700 dark:text-amber-400">● {deactivatedCount} Deactivated</span>
-            <span className="text-slate-500 dark:text-slate-400">● {archivedCount} Archived</span>
-          </div>
+          <p className="text-base font-bold text-slate-900 dark:text-slate-100">
+            {activeCount} Active <span className="text-xs font-normal text-slate-400">/ {deactivatedCount} Inactive</span>
+          </p>
         </div>
       </div>
 
@@ -964,8 +956,8 @@ export function MemberManagementClient({
                   </span>
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">{primaryAdmin?.fullName || 'Mohammad Tarek Hossen'}</h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                  Supreme system authority. Mohammad Tarek Hossen is permanently protected and cannot be demoted, deactivated, or replaced by any user.
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                  Protected primary administrator account.
                 </p>
                 <div className="mt-4 pt-3 border-t border-amber-200 dark:border-amber-800 text-[11px] text-amber-900 dark:text-amber-300 font-semibold flex items-center gap-1.5">
                   <Lock className="w-3.5 h-3.5" /> Immutable Security Anchor
@@ -986,8 +978,8 @@ export function MemberManagementClient({
                     </span>
                   </div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Admin Privilege Sharing</h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                    Primary Admin can share administrative authority with other active members. Admin privileges and Manager assignments are separate.
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                    Primary Admin can delegate administrative roles to active members.
                   </p>
                 </div>
 
@@ -1033,7 +1025,7 @@ export function MemberManagementClient({
                   {sharedAdmins.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-6 py-8 text-center text-slate-400 italic">
-                        No shared admins currently assigned. All admin authority resides with Mohammad Tarek Hossen.
+                        No shared admins currently assigned.
                       </td>
                     </tr>
                   ) : (

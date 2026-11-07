@@ -170,9 +170,9 @@ export function Header({
   ];
 
   return (
-    <div className="sticky top-0 z-30 w-full max-w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 shadow-2xs transition-colors">
+    <div className="sticky top-0 z-40 w-full max-w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 shadow-2xs transition-colors">
       {/* 1. Main Utility Top Row */}
-      <header className="h-16 px-3 sm:px-4 md:px-8 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 w-full max-w-full overflow-hidden">
+      <header className="h-14 sm:h-16 px-2.5 sm:px-4 md:px-8 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 w-full max-w-full relative overflow-visible z-20">
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {onMobileMenuToggle && (
             <button
@@ -322,7 +322,7 @@ export function Header({
       {/* 2. Top Navigation Bar for 9 Modules (Orange, Off-white, Soft-gray Theme, Mobile Responsive) */}
       <nav
         aria-label="Top Module Navigation"
-        className="w-full bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-xs px-2 sm:px-4 md:px-8 py-1.5 overflow-x-auto scrollbar-none"
+        className="w-full bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xs px-2 sm:px-4 md:px-8 py-1 sm:py-1.5 overflow-x-auto sm:overflow-visible scrollbar-none relative z-10"
       >
         <div className="flex items-center gap-1 sm:gap-2 min-w-max">
           {navModules
