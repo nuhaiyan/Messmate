@@ -132,6 +132,13 @@ export async function createNoticeAction(data: {
   safeRevalidate('/notices');
   safeRevalidate('/dashboard');
 
+  try {
+    const { broadcastNoticePush } = await import('@/app/actions/notifications');
+    await broadcastNoticePush(trimmedTitle, trimmedContent.slice(0, 120));
+  } catch {
+    // Non-blocking push notification error
+  }
+
   return { success: true, noticeId: notice.id };
 }
 

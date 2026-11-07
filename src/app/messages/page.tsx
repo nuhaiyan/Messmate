@@ -5,6 +5,9 @@ import { DashboardShell } from '@/components/layout/dashboard-shell';
 import { MessagesClient } from './messages-client';
 import { getConversationsAction } from '@/app/actions/messages';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function MessagesPage() {
   const session = await requireAuth();
 

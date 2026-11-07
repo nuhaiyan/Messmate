@@ -18,6 +18,7 @@ function safeRevalidate(path: string) {
 async function ensureGroupConversation(messId: string) {
   let group = await prisma.conversation.findFirst({
     where: { messId, isGroup: true },
+    orderBy: { createdAt: 'asc' },
     include: { participants: true },
   });
 
@@ -263,7 +264,7 @@ export async function getMessagesAction(conversationId: string) {
       isDeleted: false,
     },
     orderBy: { createdAt: 'asc' },
-    take: 100,
+    take: 500,
     include: {
       sender: {
         select: {
@@ -344,6 +345,13 @@ export async function sendMessageAction(conversationId: string, content: string)
   });
 
   safeRevalidate('/messages');
+
+  try {
+    const { broadcastMessagePush } = await import('@/app/actions/notifications');
+    await broadcastMessagePush(session.name, trimmed, conversationId);
+  } catch {
+    // Non-blocking push notification error
+  }
 
   return {
     success: true,

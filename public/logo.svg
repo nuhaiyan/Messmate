@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#0f766e" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Squircle -->
+  <rect x="24" y="24" width="464" height="464" rx="110" fill="url(#bgGrad)" stroke="#34d399" stroke-width="6" stroke-opacity="0.4" />
+
+  <!-- Center Golden Glow -->
+  <circle cx="256" cy="225" r="100" fill="#f59e0b" opacity="0.25" filter="url(#glow)" />
+
+  <!-- Steam Arcs -->
+  <path d="M 220 120 Q 210 100 225 80" stroke="#fbbf24" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.8" />
+  <path d="M 256 110 Q 250 90 262 70" stroke="#fbbf24" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.9" />
+  <path d="M 292 120 Q 302 100 287 80" stroke="#fbbf24" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.8" />
+
+  <!-- Cloche Handle -->
+  <circle cx="256" cy="142" r="15" fill="url(#goldGrad)" stroke="#d97706" stroke-width="3" />
+  <rect x="251" y="152" width="10" height="12" fill="url(#goldGrad)" />
+
+  <!-- Cloche Dome -->
+  <path d="M 150 250 A 106 100 0 0 1 362 250 Z" fill="#ffffff" stroke="url(#goldGrad)" stroke-width="7" />
+  <path d="M 175 235 A 85 80 0 0 1 230 170" stroke="#a7f3d0" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.8" />
+
+  <!-- Dining Plate -->
+  <ellipse cx="256" cy="265" rx="135" ry="18" fill="#ffffff" stroke="url(#goldGrad)" stroke-width="6" />
+  <ellipse cx="256" cy="265" rx="100" ry="10" fill="#f1f5f9" />
+
+  <!-- MessMate Badge Pill -->
+  <rect x="126" y="375" width="260" height="60" rx="18" fill="#0f172a" stroke="#34d399" stroke-width="3" />
+  <text x="256" y="416" font-family="system-ui, -apple-system, sans-serif" font-size="30" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">MessMate</text>
+</svg>

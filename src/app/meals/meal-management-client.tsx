@@ -290,67 +290,73 @@ export function MealManagementClient({
                         {m.roomNumber || '—'}
                       </td>
 
-                      {/* Breakfast Select / Input */}
+                      {/* Breakfast Input */}
                       <td className="py-2.5 px-4 text-center">
-                        <select
+                        <input
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          max="99"
                           disabled={!isManager || isClosed}
-                          value={current.b}
-                          onChange={(e) => handleMealChange(m.memberId, 'b', parseFloat(e.target.value))}
+                          value={current.b === 0 ? 0 : current.b}
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            handleMealChange(m.memberId, 'b', isNaN(val) ? 0 : Math.max(0, val));
+                          }}
                           aria-label={`Breakfast for ${m.fullName}`}
-                          className={`w-16 py-1 px-2 text-center rounded-md border text-xs font-semibold focus:outline-hidden focus:ring-1 focus:ring-emerald-500 cursor-pointer ${
+                          className={`w-16 py-1 px-1.5 text-center rounded-lg border text-xs font-bold transition-all focus:outline-hidden focus:ring-2 focus:ring-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed ${
                             current.b > 0
-                              ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300'
-                              : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-400 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200'
+                              : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'
                           }`}
-                        >
-                          <option value="0" className="dark:bg-slate-900 dark:text-slate-100">0</option>
-                          <option value="0.5" className="dark:bg-slate-900 dark:text-slate-100">0.5</option>
-                          <option value="1" className="dark:bg-slate-900 dark:text-slate-100">1</option>
-                          <option value="1.5" className="dark:bg-slate-900 dark:text-slate-100">1.5</option>
-                          <option value="2" className="dark:bg-slate-900 dark:text-slate-100">2</option>
-                        </select>
+                        />
                       </td>
 
-                      {/* Lunch Select / Input */}
+                      {/* Lunch Input */}
                       <td className="py-2.5 px-4 text-center">
-                        <select
+                        <input
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          max="99"
                           disabled={!isManager || isClosed}
-                          value={current.l}
-                          onChange={(e) => handleMealChange(m.memberId, 'l', parseFloat(e.target.value))}
+                          value={current.l === 0 ? 0 : current.l}
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            handleMealChange(m.memberId, 'l', isNaN(val) ? 0 : Math.max(0, val));
+                          }}
                           aria-label={`Lunch for ${m.fullName}`}
-                          className={`w-16 py-1 px-2 text-center rounded-md border text-xs font-semibold focus:outline-hidden focus:ring-1 focus:ring-emerald-500 cursor-pointer ${
+                          className={`w-16 py-1 px-1.5 text-center rounded-lg border text-xs font-bold transition-all focus:outline-hidden focus:ring-2 focus:ring-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed ${
                             current.l > 0
-                              ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300'
-                              : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-400 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200'
+                              : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'
                           }`}
-                        >
-                          <option value="0" className="dark:bg-slate-900 dark:text-slate-100">0</option>
-                          <option value="0.5" className="dark:bg-slate-900 dark:text-slate-100">0.5</option>
-                          <option value="1" className="dark:bg-slate-900 dark:text-slate-100">1</option>
-                          <option value="1.5" className="dark:bg-slate-900 dark:text-slate-100">1.5</option>
-                          <option value="2" className="dark:bg-slate-900 dark:text-slate-100">2</option>
-                        </select>
+                        />
                       </td>
 
-                      {/* Dinner Select / Input */}
+                      {/* Dinner Input */}
                       <td className="py-2.5 px-4 text-center">
-                        <select
+                        <input
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          max="99"
                           disabled={!isManager || isClosed}
-                          value={current.d}
-                          onChange={(e) => handleMealChange(m.memberId, 'd', parseFloat(e.target.value))}
+                          value={current.d === 0 ? 0 : current.d}
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            handleMealChange(m.memberId, 'd', isNaN(val) ? 0 : Math.max(0, val));
+                          }}
                           aria-label={`Dinner for ${m.fullName}`}
-                          className={`w-16 py-1 px-2 text-center rounded-md border text-xs font-semibold focus:outline-hidden focus:ring-1 focus:ring-emerald-500 cursor-pointer ${
+                          className={`w-16 py-1 px-1.5 text-center rounded-lg border text-xs font-bold transition-all focus:outline-hidden focus:ring-2 focus:ring-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed ${
                             current.d > 0
-                              ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300'
-                              : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-400 dark:border-emerald-600 text-emerald-900 dark:text-emerald-200'
+                              : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'
                           }`}
-                        >
-                          <option value="0" className="dark:bg-slate-900 dark:text-slate-100">0</option>
-                          <option value="0.5" className="dark:bg-slate-900 dark:text-slate-100">0.5</option>
-                          <option value="1" className="dark:bg-slate-900 dark:text-slate-100">1</option>
-                          <option value="1.5" className="dark:bg-slate-900 dark:text-slate-100">1.5</option>
-                          <option value="2" className="dark:bg-slate-900 dark:text-slate-100">2</option>
-                        </select>
+                        />
                       </td>
 
                       <td className="py-3 px-4 text-center font-bold text-slate-900 dark:text-slate-100">

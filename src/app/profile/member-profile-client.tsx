@@ -426,42 +426,45 @@ export function MemberProfileClient({
                 className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100 focus:outline-emerald-500 font-medium"
               />
 
-              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
-                <span className="text-slate-500 font-medium">{t.mealEntry?.breakfast || 'BF'}:</span>
+              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs shadow-2xs focus-within:ring-2 focus-within:ring-emerald-500/50">
+                <span className="text-slate-700 dark:text-slate-200 font-bold">{t.mealEntry?.breakfast || 'BF'}:</span>
                 <input
                   type="number"
                   step="0.5"
                   min="0"
-                  max="10"
+                  max="99"
                   value={entryBf}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setEntryBf(parseFloat(e.target.value) || 0)}
-                  className="w-12 text-center font-bold text-slate-900 dark:text-slate-100 focus:outline-hidden"
+                  className="w-12 text-center font-extrabold text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md py-0.5 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
-              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
-                <span className="text-slate-500 font-medium">{t.mealEntry?.lunch || 'LN'}:</span>
+              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs shadow-2xs focus-within:ring-2 focus-within:ring-emerald-500/50">
+                <span className="text-slate-700 dark:text-slate-200 font-bold">{t.mealEntry?.lunch || 'LN'}:</span>
                 <input
                   type="number"
                   step="0.5"
                   min="0"
-                  max="10"
+                  max="99"
                   value={entryLn}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setEntryLn(parseFloat(e.target.value) || 0)}
-                  className="w-12 text-center font-bold text-slate-900 dark:text-slate-100 focus:outline-hidden"
+                  className="w-12 text-center font-extrabold text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md py-0.5 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
-              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
-                <span className="text-slate-500 font-medium">{t.mealEntry?.dinner || 'DN'}:</span>
+              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs shadow-2xs focus-within:ring-2 focus-within:ring-emerald-500/50">
+                <span className="text-slate-700 dark:text-slate-200 font-bold">{t.mealEntry?.dinner || 'DN'}:</span>
                 <input
                   type="number"
                   step="0.5"
                   min="0"
-                  max="10"
+                  max="99"
                   value={entryDn}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setEntryDn(parseFloat(e.target.value) || 0)}
-                  className="w-12 text-center font-bold text-slate-900 dark:text-slate-100 focus:outline-hidden"
+                  className="w-12 text-center font-extrabold text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md py-0.5 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
@@ -1049,10 +1052,11 @@ export function MemberProfileClient({
                     type="number"
                     step="0.5"
                     min="0"
-                    max="10"
+                    max="99"
                     value={editMealBf}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => setEditMealBf(parseFloat(e.target.value) || 0)}
-                    className="w-full text-center px-2 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-slate-100 focus:outline-emerald-500"
+                    className="w-full text-center px-2 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-extrabold text-slate-900 dark:text-white focus:outline-emerald-500"
                   />
                 </div>
 
@@ -1064,10 +1068,11 @@ export function MemberProfileClient({
                     type="number"
                     step="0.5"
                     min="0"
-                    max="10"
+                    max="99"
                     value={editMealLn}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => setEditMealLn(parseFloat(e.target.value) || 0)}
-                    className="w-full text-center px-2 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-slate-100 focus:outline-emerald-500"
+                    className="w-full text-center px-2 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-extrabold text-slate-900 dark:text-white focus:outline-emerald-500"
                   />
                 </div>
 
@@ -1079,10 +1084,11 @@ export function MemberProfileClient({
                     type="number"
                     step="0.5"
                     min="0"
-                    max="10"
+                    max="99"
                     value={editMealDn}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => setEditMealDn(parseFloat(e.target.value) || 0)}
-                    className="w-full text-center px-2 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-slate-100 focus:outline-emerald-500"
+                    className="w-full text-center px-2 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-extrabold text-slate-900 dark:text-white focus:outline-emerald-500"
                   />
                 </div>
               </div>

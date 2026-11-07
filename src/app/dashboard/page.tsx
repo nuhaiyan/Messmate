@@ -6,6 +6,7 @@ import { DashboardShell } from '@/components/layout/dashboard-shell';
 import { InteractiveDashboardCards } from '@/components/dashboard/interactive-dashboard-cards';
 import { DashboardCharts } from '@/components/dashboard/dashboard-charts';
 import { LatestNoticeBanner } from '@/components/dashboard/latest-notice-banner';
+import { PhoneNotificationBanner } from '@/components/notifications/phone-notification-button';
 import { NoticeCategory } from '@/app/actions/notices';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -335,6 +336,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
       {/* LATEST BILLBOARD NOTICE HIGHLIGHT BANNER */}
       <LatestNoticeBanner latestNotice={latestNoticeItem} />
+
+      {/* PHONE PUSH NOTIFICATION PROMPT */}
+      <div className="mb-6">
+        <PhoneNotificationBanner />
+      </div>
 
       {/* 2. 10 INTERACTIVE STATISTICS CARDS (Warm Orange Accent & Clean SaaS Hierarchy) */}
       <div className="mb-6">

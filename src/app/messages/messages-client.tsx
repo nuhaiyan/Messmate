@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useTransition } from 'react';
+import React, { useState, useEffect, useRef, useTransition, useCallback } from 'react';
 import {
   MessageSquare,
   Users,
@@ -15,6 +15,8 @@ import {
   CheckCheck,
   AlertCircle,
   Clock,
+  Sparkles,
+  RefreshCw,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/context';
 import {
@@ -22,9 +24,10 @@ import {
   sendMessageAction,
   deleteMessageAction,
   getOrCreateDirectConversationAction,
+  getConversationsAction,
 } from '@/app/actions/messages';
 
-interface ConversationItem {
+export interface ConversationItem {
   id: string;
   isGroup: boolean;
   title: string;
@@ -39,7 +42,7 @@ interface ConversationItem {
   updatedAt: string;
 }
 
-interface MemberItem {
+export interface MemberItem {
   id: string;
   name: string;
   avatarUrl: string | null;
@@ -50,7 +53,7 @@ interface MemberItem {
   isCurrentUser: boolean;
 }
 
-interface MessageItem {
+export interface MessageItem {
   id: string;
   content: string;
   senderId: string;
@@ -78,47 +81,113 @@ export function MessagesClient({
   canModerate,
 }: MessagesClientProps) {
   const { t } = useI18n();
-  const [conversations, setConversations] = useState(initialConversations);
+  const [conversations, setConversations] = useState<ConversationItem[]>(initialConversations);
   const [activeConvId, setActiveConvId] = useState<string>(initialGroupConvId);
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [inputText, setInputText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isInitialMount = useRef(true);
+
+  // Restore saved active conversation on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('messmate_active_conv');
+      if (saved && (saved === initialGroupConvId || conversations.some((c) => c.id === saved))) {
+        setActiveConvId(saved);
+      }
+    } catch {
+      // Ignore localStorage read errors
+    }
+  }, [initialGroupConvId, conversations]);
+
+  // Persist active conversation on change
+  const handleSelectConv = (convId: string) => {
+    setActiveConvId(convId);
+    try {
+      localStorage.setItem('messmate_active_conv', convId);
+    } catch {
+      // Ignore localStorage write errors
+    }
+  };
 
   const activeConversation = conversations.find((c) => c.id === activeConvId);
 
   // Auto scroll to bottom
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const scrollToBottom = useCallback((smooth = true) => {
+    messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' });
+  }, []);
 
-  // Fetch messages when active conversation changes
+  // Fetch messages helper
+  const fetchMessages = useCallback(
+    async (convId: string, showSpinner = false) => {
+      if (!convId) return;
+      if (showSpinner) setIsLoadingMessages(true);
+      try {
+        const res = await getMessagesAction(convId);
+        setMessages(res.messages);
+        if (showSpinner) {
+          setTimeout(() => scrollToBottom(false), 80);
+        }
+      } catch (err) {
+        console.error('Failed to load messages:', err);
+      } finally {
+        if (showSpinner) setIsLoadingMessages(false);
+      }
+    },
+    [scrollToBottom]
+  );
+
+  // Fetch messages whenever activeConvId changes
+  useEffect(() => {
+    if (!activeConvId) return;
+    fetchMessages(activeConvId, true);
+  }, [activeConvId, fetchMessages]);
+
+  // Background auto-polling (every 3.5 seconds) so messages never vanish and update in real-time
   useEffect(() => {
     if (!activeConvId) return;
 
-    let isMounted = true;
-    setIsLoadingMessages(true);
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        fetchMessages(activeConvId, false);
+      }
+    }, 3500);
 
-    getMessagesAction(activeConvId)
-      .then((res) => {
-        if (isMounted) {
-          setMessages(res.messages);
-          setIsLoadingMessages(false);
-          setTimeout(scrollToBottom, 100);
+    return () => clearInterval(interval);
+  }, [activeConvId, fetchMessages]);
+
+  // Periodic polling for conversations list (every 10 seconds)
+  useEffect(() => {
+    const convInterval = setInterval(async () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        try {
+          const res = await getConversationsAction();
+          setConversations(res.conversations);
+        } catch {
+          // Ignore background fetch failure
         }
-      })
-      .catch((err) => {
-        console.error('Failed to load messages', err);
-        if (isMounted) setIsLoadingMessages(false);
-      });
+      }
+    }, 10000);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [activeConvId]);
+    return () => clearInterval(convInterval);
+  }, []);
+
+  // Manual refresh button
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await fetchMessages(activeConvId, true);
+      const res = await getConversationsAction();
+      setConversations(res.conversations);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Handle Send Message
   const handleSend = async (e: React.FormEvent) => {
@@ -142,22 +211,34 @@ export function MessagesClient({
       createdAt: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, optimisticMsg]);
-    setTimeout(scrollToBottom, 50);
+    setTimeout(() => scrollToBottom(true), 50);
 
-    const res = await sendMessageAction(activeConvId, text);
-    if (!res.success) {
-      // Remove failed message
+    try {
+      const res = await sendMessageAction(activeConvId, text);
+      if (!res.success) {
+        // Remove failed message
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
+        alert(res.error || 'Failed to send message');
+      } else {
+        // Replace temp ID with real ID
+        setMessages((prev) =>
+          prev.map((m) => (m.id === tempId ? { ...m, id: res.messageId! } : m))
+        );
+        // Refresh conversations to update snippets
+        const convData = await getConversationsAction();
+        setConversations(convData.conversations);
+      }
+    } catch (err) {
+      console.error('Send error:', err);
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
-    } else {
-      // Replace temp ID with real ID
-      setMessages((prev) =>
-        prev.map((m) => (m.id === tempId ? { ...m, id: res.messageId! } : m))
-      );
     }
   };
 
-  // Handle Delete Message
+  // Handle Delete Message with confirmation to prevent accidental mobile touches
   const handleDeleteMessage = (messageId: string) => {
+    if (!window.confirm('Are you sure you want to delete this message? (আপনি কি নিশ্চিত বার্তাটি মুছে ফেলতে চান?)')) {
+      return;
+    }
     startTransition(async () => {
       const res = await deleteMessageAction(messageId);
       if (res.success) {
@@ -171,7 +252,7 @@ export function MessagesClient({
     startTransition(async () => {
       const res = await getOrCreateDirectConversationAction(memberId);
       if (res.conversationId) {
-        setActiveConvId(res.conversationId);
+        handleSelectConv(res.conversationId);
       }
     });
   };
@@ -183,8 +264,11 @@ export function MessagesClient({
       m.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Group direct conversations
+  const directConversations = conversations.filter((c) => !c.isGroup);
+
   return (
-    <div className="h-[calc(100vh-140px)] min-h-[500px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col md:flex-row">
+    <div className="h-[calc(100vh-140px)] min-h-[520px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col md:flex-row">
       {/* LEFT PANE: Conversation & Member List */}
       <div
         className={`w-full md:w-80 lg:w-96 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 bg-slate-50/60 dark:bg-slate-900/60 ${
@@ -198,9 +282,14 @@ export function MessagesClient({
               <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               {t.messages?.title || 'Mess Community & Messages'}
             </h2>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold">
-              {allMembers.length} Members
-            </span>
+            <button
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              title="Refresh messages"
+              className="p-1 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-emerald-600' : ''}`} />
+            </button>
           </div>
 
           <div className="relative">
@@ -219,10 +308,10 @@ export function MessagesClient({
         <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
           {/* 1. Group Common Room (Always Top) */}
           <button
-            onClick={() => setActiveConvId(initialGroupConvId)}
+            onClick={() => handleSelectConv(initialGroupConvId)}
             className={`w-full p-3.5 flex items-center gap-3 text-left transition-colors cursor-pointer ${
               activeConvId === initialGroupConvId
-                ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-l-4 border-emerald-600'
+                ? 'bg-emerald-50/90 dark:bg-emerald-950/50 border-l-4 border-emerald-600'
                 : 'hover:bg-slate-100/70 dark:hover:bg-slate-800/50'
             }`}
           >
@@ -234,7 +323,9 @@ export function MessagesClient({
                 <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
                   {t.messages?.groupChat || 'Mess Community Common Room'}
                 </p>
-                <span className="text-[10px] text-emerald-600 font-semibold uppercase">All</span>
+                <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.2 rounded-full">
+                  All
+                </span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
                 Group chat for all mess roommates
@@ -242,9 +333,54 @@ export function MessagesClient({
             </div>
           </button>
 
-          {/* 2. Direct Messages section */}
+          {/* 2. Direct Conversations (if any exist) */}
+          {directConversations.length > 0 && (
+            <div className="px-3.5 py-1.5 bg-slate-100/50 dark:bg-slate-950/40 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Recent Chats
+            </div>
+          )}
+
+          {directConversations.map((conv) => {
+            const isSelected = activeConvId === conv.id;
+            return (
+              <button
+                key={conv.id}
+                onClick={() => handleSelectConv(conv.id)}
+                className={`w-full p-3 flex items-center gap-3 text-left transition-colors cursor-pointer ${
+                  isSelected
+                    ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-l-4 border-emerald-600'
+                    : 'hover:bg-slate-100/70 dark:hover:bg-slate-800/50'
+                }`}
+              >
+                <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+                  {conv.avatarUrl ? (
+                    <img src={conv.avatarUrl} alt={conv.title} className="w-full h-full object-cover" />
+                  ) : (
+                    conv.title.charAt(0)
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
+                      {conv.title}
+                    </p>
+                    {conv.lastMessage && (
+                      <span className="text-[9px] text-slate-400 shrink-0">
+                        {new Date(conv.lastMessage.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                    {conv.lastMessage ? conv.lastMessage.text : 'Direct chat'}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
+
+          {/* 3. All Roommates Section */}
           <div className="px-3.5 py-2 bg-slate-100/50 dark:bg-slate-950/40 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            {t.messages?.directMessages || 'Direct Messages'}
+            {t.messages?.directMessages || 'All Roommates'}
           </div>
 
           {filteredMembers.map((m) => {
@@ -300,7 +436,7 @@ export function MessagesClient({
             </button>
 
             <div className="w-9 h-9 rounded-xl bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0">
-              {activeConversation?.isGroup ? (
+              {activeConversation?.isGroup || activeConvId === initialGroupConvId ? (
                 <Users className="w-5 h-5" />
               ) : (
                 <User className="w-5 h-5" />
@@ -313,10 +449,19 @@ export function MessagesClient({
               </h3>
               <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                {t.messages?.activeNow || 'Active'}
+                {t.messages?.activeNow || 'Active • All messages saved permanently'}
               </p>
             </div>
           </div>
+
+          <button
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          >
+            <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-emerald-600' : ''}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
         </div>
 
         {/* Message Thread */}
@@ -388,7 +533,7 @@ export function MessagesClient({
                             type="button"
                             onClick={() => handleDeleteMessage(msg.id)}
                             title={t.messages?.deleteMessage || 'Delete Message'}
-                            className="opacity-0 group-hover:opacity-100 ml-1 text-rose-400 hover:text-rose-500 transition-opacity cursor-pointer"
+                            className="opacity-0 group-hover:opacity-100 ml-1 text-rose-400 hover:text-rose-500 transition-opacity cursor-pointer p-0.5"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
@@ -417,7 +562,7 @@ export function MessagesClient({
           />
           <button
             type="submit"
-            disabled={!inputText.trim()}
+            disabled={!inputText.trim() || isPending}
             className="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white shadow-xs transition-colors cursor-pointer"
             aria-label="Send Message"
           >

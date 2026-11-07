@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Calendar, TrendingUp, Menu, Shield, Crown, User, LogOut, Sun, Moon } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/context';
+import { PhoneNotificationButton } from '@/components/notifications/phone-notification-button';
 import { useTheme } from '@/lib/theme/context';
 import { logoutAction } from '@/app/actions/auth';
 
@@ -113,6 +114,9 @@ export function Header({
             </span>
           </div>
         )}
+
+        {/* Phone Notification Bell & Direct Test */}
+        <PhoneNotificationButton />
 
         {/* Dark/Light Theme Toggle */}
         <button
