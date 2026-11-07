@@ -8,16 +8,26 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || (!session.isPrimaryAdmin && !session.isAdmin && !session.isManager)) {
+    if (!session) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized: Only Managers and Admins can upload assets.' },
-        { status: 403 }
+        { success: false, error: 'Unauthorized: Please log in to upload files.' },
+        { status: 401 }
       );
     }
 
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
     const uploadType = (formData.get('type') as string) || 'asset';
+
+    // Permission Check: Any authenticated member can upload their own profile avatar.
+    // General assets and mess branding uploads are restricted to Managers and Admins.
+    const isManagement = session.isPrimaryAdmin || session.isAdmin || session.isManager;
+    if (uploadType !== 'avatar' && !isManagement) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Only Managers and Admins can upload general assets.' },
+        { status: 403 }
+      );
+    }
 
     if (!file || typeof file === 'string') {
       return NextResponse.json(

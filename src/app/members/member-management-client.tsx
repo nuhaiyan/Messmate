@@ -26,6 +26,7 @@ import {
   ArrowRight,
   ShieldAlert,
   Key,
+  Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -108,8 +109,11 @@ export function MemberManagementClient({
   initialTab = 'members',
 }: MemberManagementClientProps) {
   const router = useRouter();
+  const isGeneralMember = !currentUser.isPrimaryAdmin && !currentUser.isAdmin && !currentUser.isManager;
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
+
   const [activeTab, setActiveTab] = useState<'members' | 'manager' | 'admins'>(
-    initialTab === 'manager' || initialTab === 'admins' ? initialTab : 'members'
+    isGeneralMember ? 'members' : (initialTab === 'manager' || initialTab === 'admins' ? initialTab : 'members')
   );
 
   const [isPending, startTransition] = useTransition();
@@ -503,42 +507,62 @@ export function MemberManagementClient({
           <span>All Members ({totalCount})</span>
         </button>
 
-        <button
-          onClick={() => setActiveTab('manager')}
-          className={`pb-3 px-4 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
-            activeTab === 'manager'
-              ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
-              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-          }`}
-        >
-          <Crown className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-          <span>Manager Management &amp; History</span>
-        </button>
+        {!isGeneralMember && (
+          <>
+            <button
+              onClick={() => setActiveTab('manager')}
+              className={`pb-3 px-4 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
+                activeTab === 'manager'
+                  ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+              }`}
+            >
+              <Crown className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span>Manager Management &amp; History</span>
+            </button>
 
-        <button
-          onClick={() => setActiveTab('admins')}
-          className={`pb-3 px-4 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
-            activeTab === 'admins'
-              ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
-              : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-          }`}
-        >
-          <Shield className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-          <span>Admin Privileges ({1 + sharedAdmins.length})</span>
-        </button>
+            <button
+              onClick={() => setActiveTab('admins')}
+              className={`pb-3 px-4 text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
+                activeTab === 'admins'
+                  ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+              }`}
+            >
+              <Shield className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <span>Admin Privileges ({1 + sharedAdmins.length})</span>
+            </button>
+          </>
+        )}
       </div>
 
       {/* TAB 1: ALL MEMBERS LIST */}
       {activeTab === 'members' && (
         <Card className="border border-slate-200 dark:border-slate-800 shadow-2xs overflow-hidden">
-          <CardHeader className="bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 px-6 py-4 flex flex-row items-center justify-between">
-            <CardTitle className="text-base font-bold text-slate-800 dark:text-slate-100">
-              Mess Members Directory ({members.length})
-            </CardTitle>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
-              Active members appear on daily meal sheets and expense splits
-            </span>
-          </CardHeader>
+          <div className="bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <Users className="w-5 h-5 text-orange-500" />
+                <span>Mess Members Directory ({members.length})</span>
+              </CardTitle>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {isGeneralMember
+                  ? 'All 14 mess roommates. To protect roommate privacy, only your own individual profile & financial ledger are accessible.'
+                  : 'Active members appear on daily meal sheets, bazar schedules, and expense splits'}
+              </p>
+            </div>
+
+            <div className="relative max-w-xs w-full">
+              <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search member by name..."
+                value={memberSearchQuery}
+                onChange={(e) => setMemberSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-1 focus:ring-orange-500"
+              />
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
               <thead className="bg-slate-100/75 dark:bg-slate-800/80 text-xs uppercase font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
@@ -554,9 +578,16 @@ export function MemberManagementClient({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
-                {members.map((m, idx) => {
+                {members
+                  .filter((m) =>
+                    m.fullName.toLowerCase().includes(memberSearchQuery.toLowerCase()) ||
+                    (m.roomNumber && m.roomNumber.toLowerCase().includes(memberSearchQuery.toLowerCase()))
+                  )
+                  .map((m, idx) => {
                   const isDeactivated = !m.isActive && !m.isArchived;
                   const isArchived = m.isArchived;
+                  const isSelf = m.id === currentUser.memberId;
+                  const canViewDetails = !isGeneralMember || isSelf;
 
                   return (
                     <tr
@@ -578,20 +609,31 @@ export function MemberManagementClient({
                       {/* Name & Role Indicators */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <Link
-                            href={`/members/${m.id}`}
-                            className={`font-semibold hover:underline flex items-center gap-1.5 ${
-                              m.isPrimaryAdmin
-                                ? 'text-amber-950 dark:text-amber-300 font-bold'
-                                : m.isManager
-                                ? 'text-emerald-950 dark:text-emerald-300 font-bold'
-                                : isArchived
-                                ? 'line-through text-slate-400 dark:text-slate-500'
-                                : 'text-slate-900 dark:text-slate-100 hover:text-orange-600 dark:hover:text-orange-400'
-                            }`}
-                          >
-                            {m.fullName}
-                          </Link>
+                          {canViewDetails ? (
+                            <Link
+                              href={isSelf ? '/profile' : `/members/${m.id}`}
+                              className={`font-semibold hover:underline flex items-center gap-1.5 ${
+                                m.isPrimaryAdmin
+                                  ? 'text-amber-950 dark:text-amber-300 font-bold'
+                                  : m.isManager
+                                  ? 'text-emerald-950 dark:text-emerald-300 font-bold'
+                                  : isArchived
+                                  ? 'line-through text-slate-400 dark:text-slate-500'
+                                  : 'text-slate-900 dark:text-slate-100 hover:text-orange-600 dark:hover:text-orange-400'
+                              }`}
+                            >
+                              <span>{m.fullName}</span>
+                              {isSelf && (
+                                <span className="text-[10px] font-bold bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 px-1.5 py-0.2 rounded-full border border-orange-200">
+                                  You
+                                </span>
+                              )}
+                            </Link>
+                          ) : (
+                            <span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                              {m.fullName}
+                            </span>
+                          )}
                           {m.isPrimaryAdmin && (
                             <span title="Permanent Primary Admin">
                               <Crown className="w-4 h-4 text-amber-500 fill-amber-400" />
@@ -650,103 +692,124 @@ export function MemberManagementClient({
 
                       {/* Room & Contact */}
                       <td className="px-6 py-4 font-mono text-xs text-slate-700 dark:text-slate-300">{m.roomNumber || '—'}</td>
-                      <td className="px-6 py-4 font-mono text-xs text-slate-700 dark:text-slate-300">{m.phone}</td>
-                      <td className="px-6 py-4 font-mono text-xs font-medium text-slate-900 dark:text-slate-100">৳{m.initialOpeningBalance}</td>
+                      <td className="px-6 py-4 font-mono text-xs text-slate-700 dark:text-slate-300">
+                        {canViewDetails ? m.phone : <span className="text-slate-400 italic">Protected</span>}
+                      </td>
+                      <td className="px-6 py-4 font-mono text-xs font-medium text-slate-900 dark:text-slate-100">
+                        {canViewDetails ? `৳${m.initialOpeningBalance}` : '—'}
+                      </td>
 
                       {/* Actions */}
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* Profile Link */}
-                          <Link
-                            href={`/members/${m.id}`}
-                            title="View Member Profile"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-slate-800 transition-colors"
-                          >
-                            <User className="w-4 h-4" />
-                          </Link>
-
-                          {/* Ledger button */}
-                          <Link
-                            href={`/my-ledger?memberId=${m.id}`}
-                            title="View Individual Ledger"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
-                          >
-                            <BookOpenText className="w-4 h-4" />
-                          </Link>
-
-                          {/* Edit button */}
-                          <button
-                            onClick={() => openEditModal(m)}
-                            title="Edit Member"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-sky-700 hover:bg-sky-50 transition-colors cursor-pointer"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-
-                          {/* Manage Login & Password */}
-                          {(!m.isPrimaryAdmin || currentUser.isPrimaryAdmin) && (
-                            <button
-                              onClick={() => {
-                                setPasswordModalMember(m);
-                                setNewPasswordInput('');
-                              }}
-                              title={m.isPrimaryAdmin ? 'Change Admin Password' : 'Manage Password & Login Access'}
-                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                                m.isPrimaryAdmin
-                                  ? 'text-amber-600 hover:text-amber-800 hover:bg-amber-50'
-                                  : 'text-slate-500 hover:text-indigo-700 hover:bg-indigo-50'
-                              }`}
+                        {isGeneralMember ? (
+                          isSelf ? (
+                            <Link
+                              href="/profile"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold text-xs shadow-xs transition-colors"
                             >
-                              <Key className={`w-4 h-4 ${m.isPrimaryAdmin ? 'text-amber-600' : 'text-indigo-600'}`} />
-                            </button>
-                          )}
-
-                          {/* Deactivate / Reactivate (Admin Only) */}
-                          {canAdminMembers && !m.isPrimaryAdmin && !m.isArchived && (
-                            <>
-                              {m.isActive ? (
-                                <button
-                                  onClick={() => setDeactivateModalMember(m)}
-                                  title="Deactivate Member (Preserves past records, excludes from future meals)"
-                                  disabled={m.isManager}
-                                  className="p-1.5 rounded-lg text-slate-500 hover:text-amber-700 hover:bg-amber-50 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                                >
-                                  <PowerOff className="w-4 h-4 text-amber-600" />
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => handleReactivate(m)}
-                                  title="Reactivate Member for active operations"
-                                  className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer"
-                                >
-                                  <Power className="w-4 h-4 text-emerald-600" />
-                                </button>
-                              )}
-                            </>
-                          )}
-
-                          {/* Archive (Soft delete, Admin Only) */}
-                          {canAdminMembers && !m.isPrimaryAdmin && !m.isArchived && (
-                            <button
-                              onClick={() => setArchiveModalMember(m)}
-                              title="Archive Member (Soft delete, historical transactions 100% preserved)"
-                              disabled={m.isManager}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                            >
-                              <Archive className="w-4 h-4 text-rose-500" />
-                            </button>
-                          )}
-
-                          {/* Primary Admin locked badge */}
-                          {m.isPrimaryAdmin && (
-                            <span
-                              title="Primary Admin is permanent and cannot be deactivated or deleted"
-                              className="p-1 text-amber-600"
-                            >
-                              <Lock className="w-4 h-4" />
+                              <User className="w-3.5 h-3.5" />
+                              <span>My Profile</span>
+                            </Link>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">
+                              <Lock className="w-3 h-3 text-slate-400" />
+                              <span>Protected</span>
                             </span>
-                          )}
-                        </div>
+                          )
+                        ) : (
+                          <div className="flex items-center justify-end gap-1.5">
+                            {/* Profile Link */}
+                            <Link
+                              href={`/members/${m.id}`}
+                              title="View Member Profile"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              <User className="w-4 h-4" />
+                            </Link>
+
+                            {/* Ledger button */}
+                            <Link
+                              href={`/my-ledger?memberId=${m.id}`}
+                              title="View Individual Ledger"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+                            >
+                              <BookOpenText className="w-4 h-4" />
+                            </Link>
+
+                            {/* Edit button */}
+                            <button
+                              onClick={() => openEditModal(m)}
+                              title="Edit Member"
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-sky-700 hover:bg-sky-50 transition-colors cursor-pointer"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+
+                            {/* Manage Login & Password */}
+                            {(!m.isPrimaryAdmin || currentUser.isPrimaryAdmin) && (
+                              <button
+                                onClick={() => {
+                                  setPasswordModalMember(m);
+                                  setNewPasswordInput('');
+                                }}
+                                title={m.isPrimaryAdmin ? 'Change Admin Password' : 'Manage Password & Login Access'}
+                                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                  m.isPrimaryAdmin
+                                    ? 'text-amber-600 hover:text-amber-800 hover:bg-amber-50'
+                                    : 'text-slate-500 hover:text-indigo-700 hover:bg-indigo-50'
+                                }`}
+                              >
+                                <Key className={`w-4 h-4 ${m.isPrimaryAdmin ? 'text-amber-600' : 'text-indigo-600'}`} />
+                              </button>
+                            )}
+
+                            {/* Deactivate / Reactivate (Admin Only) */}
+                            {canAdminMembers && !m.isPrimaryAdmin && !m.isArchived && (
+                              <>
+                                {m.isActive ? (
+                                  <button
+                                    onClick={() => setDeactivateModalMember(m)}
+                                    title="Deactivate Member (Preserves past records, excludes from future meals)"
+                                    disabled={m.isManager}
+                                    className="p-1.5 rounded-lg text-slate-500 hover:text-amber-700 hover:bg-amber-50 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                                  >
+                                    <PowerOff className="w-4 h-4 text-amber-600" />
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleReactivate(m)}
+                                    title="Reactivate Member for active operations"
+                                    className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer"
+                                  >
+                                    <Power className="w-4 h-4 text-emerald-600" />
+                                  </button>
+                                )}
+                              </>
+                            )}
+
+                            {/* Archive (Soft delete, Admin Only) */}
+                            {canAdminMembers && !m.isPrimaryAdmin && !m.isArchived && (
+                              <button
+                                onClick={() => setArchiveModalMember(m)}
+                                title="Archive Member (Soft delete, historical transactions 100% preserved)"
+                                disabled={m.isManager}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                              >
+                                <Archive className="w-4 h-4 text-rose-500" />
+                              </button>
+                            )}
+
+                            {/* Primary Admin locked badge */}
+                            {m.isPrimaryAdmin && (
+                              <span
+                                title="Primary Admin is permanent and cannot be deactivated or deleted"
+                                className="p-1 text-amber-600"
+                              >
+                                <Lock className="w-4 h-4" />
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );

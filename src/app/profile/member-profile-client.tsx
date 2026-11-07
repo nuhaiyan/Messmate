@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useRef } from 'react';
 import {
   User,
   Phone,
@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   Receipt,
   TrendingUp,
+  TrendingDown,
   Edit3,
   CheckCircle2,
   AlertCircle,
@@ -26,6 +27,9 @@ import {
   KeyRound,
   Eye,
   EyeOff,
+  Camera,
+  UploadCloud,
+  Coins,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/context';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -51,6 +55,7 @@ interface MemberData {
 
 interface PersonalAccounting {
   totalMeals: number;
+  todayMeals?: number;
   breakfast: number;
   lunch: number;
   dinner: number;
@@ -65,7 +70,15 @@ interface PersonalAccounting {
   dueAmount: number;
   advanceAmount: number;
   totalFine?: number;
+  unpaidFine?: number;
   balanceStatus: string;
+  totalJoma?: number;
+  initialBalance?: number;
+  bazarDateRange?: string;
+  bazarStatus?: string | null;
+  monthlyBalance?: number;
+  overallBalance?: number;
+  previousBalance?: number;
 }
 
 export interface BazarScheduleRecord {
@@ -203,6 +216,91 @@ export function MemberProfileClient({
         setAdminPasswordMsg({ type: 'error', text: res.error || 'Failed to update admin password.' });
       }
     });
+  };
+
+  // Direct Device Avatar Upload State
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
+  const [isAvatarUploadModalOpen, setIsAvatarUploadModalOpen] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarUploadError, setAvatarUploadError] = useState<string | null>(null);
+
+  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAvatarUploadError(null);
+
+    // Validate size (max 5MB)
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      setAvatarUploadError('ফাইল সাইজ সর্বোচ্চ ৫ মেগাবাইট হতে পারবে (Max file size is 5MB). Please choose a smaller file.');
+      setSelectedAvatarFile(null);
+      setAvatarPreviewUrl(null);
+      setIsAvatarUploadModalOpen(true);
+      return;
+    }
+
+    // Validate type
+    const validMimes = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml', 'image/gif'];
+    if (!validMimes.includes(file.type)) {
+      setAvatarUploadError('অননুমোদিত ফরম্যাট। শুধুমাত্র PNG, JPG, WEBP অথবা SVG ছবি নির্বাচন করুন (Valid formats: PNG, JPG, WEBP, SVG).');
+      setSelectedAvatarFile(null);
+      setAvatarPreviewUrl(null);
+      setIsAvatarUploadModalOpen(true);
+      return;
+    }
+
+    setSelectedAvatarFile(file);
+    const objUrl = URL.createObjectURL(file);
+    setAvatarPreviewUrl(objUrl);
+    setIsAvatarUploadModalOpen(true);
+  };
+
+  const handleUploadAndSaveAvatar = async () => {
+    if (!selectedAvatarFile) return;
+    setIsUploadingAvatar(true);
+    setAvatarUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedAvatarFile);
+      formData.append('type', 'avatar');
+
+      const uploadRes = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok || !uploadData.success) {
+        throw new Error(uploadData.error || 'ছবির আপলোড ব্যর্থ হয়েছে (Failed to upload image).');
+      }
+
+      const saveRes = await updateMemberProfileAction({
+        memberId: member.id,
+        fullName: member.fullName,
+        phone: member.phone,
+        bio: member.bio,
+        avatarUrl: uploadData.url,
+      });
+
+      if (!saveRes.success) {
+        throw new Error(saveRes.error || 'প্রোফাইলে ছবি সেভ করা সম্ভব হয়নি (Failed to save avatar).');
+      }
+
+      setMember((prev) => ({ ...prev, avatarUrl: uploadData.url }));
+      setEditAvatarUrl(uploadData.url);
+      setIsAvatarUploadModalOpen(false);
+      setSelectedAvatarFile(null);
+      setAvatarPreviewUrl(null);
+      setSuccessMsg('প্রোফাইল পিকচার সফলভাবে আপডেট করা হয়েছে (Profile picture updated successfully)!');
+    } catch (err: any) {
+      setAvatarUploadError(err.message || 'Avatar upload failed.');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   };
 
   // Meal Entry State
@@ -353,15 +451,38 @@ export function MemberProfileClient({
       {/* Profile Hero Header Card */}
       <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-start sm:items-center gap-4">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 border-2 border-emerald-500/30 overflow-hidden shrink-0 flex items-center justify-center text-white text-3xl font-bold shadow-md">
-            {member.avatarUrl ? (
-              <img
-                src={member.avatarUrl}
-                alt={member.fullName}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span>{member.fullName.charAt(0)}</span>
+          <div className="relative group shrink-0">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 border-2 border-emerald-500/30 overflow-hidden flex items-center justify-center text-white text-3xl font-bold shadow-md">
+              {member.avatarUrl ? (
+                <img
+                  src={member.avatarUrl}
+                  alt={member.fullName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span>{member.fullName.charAt(0)}</span>
+              )}
+            </div>
+
+            {/* Direct Avatar Upload Trigger Button */}
+            {(isOwnProfile || canEdit) && (
+              <>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleAvatarFileChange}
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="ডিভাইস থেকে প্রোফাইল পিকচার আপলোড করুন (Upload photo from device)"
+                  className="absolute -bottom-1 -right-1 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-900/90 hover:bg-emerald-600 text-white flex items-center justify-center shadow-md border-2 border-white dark:border-slate-900 transition-all cursor-pointer group-hover:scale-105"
+                >
+                  <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </button>
+              </>
             )}
           </div>
 
@@ -516,110 +637,249 @@ export function MemberProfileClient({
         </div>
       )}
 
-      {/* Personal Accounting Summary Cards */}
-      <div>
-        <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-3 flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-emerald-600" />
-            {t.profile?.accountingSummary || 'Personal Accounting Summary'}
-          </span>
-          <span className="text-xs font-normal text-slate-500">
-            {t.dashboard?.currentMealRate}: <strong className="text-emerald-600 font-semibold">৳{accounting.currentMealRate.toFixed(2)}</strong>
-          </span>
-        </h2>
+      {/* 9 Financial & Activity Overview Cards */}
+      {(() => {
+        const totalJomaValue =
+          accounting.totalJoma !== undefined
+            ? accounting.totalJoma
+            : (accounting.initialBalance ?? member.initialOpeningBalance ?? 0) +
+              accounting.deposits +
+              accounting.bazarContribution;
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {/* Card 1: Total Meals */}
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block truncate">
-              {t.profile?.totalMeals || 'Total Meals'}
-            </span>
-            <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-              {accounting.totalMeals}
-            </p>
-            <p className="text-[10px] text-slate-500 mt-0.5">
-              B:{accounting.breakfast} | L:{accounting.lunch} | D:{accounting.dinner}
-            </p>
-          </div>
+        const initialBalanceValue =
+          accounting.initialBalance !== undefined
+            ? accounting.initialBalance
+            : member.initialOpeningBalance ?? 0;
 
-          {/* Card 2: Meal Cost */}
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block truncate">
-              Meal Cost
-            </span>
-            <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-              {formatCurrency(accounting.mealCost)}
-            </p>
-            <p className="text-[10px] text-slate-500 mt-0.5">
-              @ ৳{accounting.currentMealRate.toFixed(2)} / meal
-            </p>
-          </div>
+        const todayMealsCount = accounting.todayMeals ?? 0;
+        const totalCostValue = accounting.totalCost;
 
-          {/* Card 3: Bazar Payments */}
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block truncate">
-              {t.profile?.bazarContribution || 'Bazar Paid'}
-            </span>
-            <p className="text-xl font-bold text-sky-600 dark:text-sky-400 mt-1">
-              {formatCurrency(accounting.bazarContribution)}
-            </p>
-            <p className="text-[10px] text-slate-500 mt-0.5">
-              Personal payments
-            </p>
-          </div>
+        const activeSchedule =
+          bazarSchedules?.current[0] ||
+          bazarSchedules?.upcoming[0] ||
+          null;
 
-          {/* Card 4: Total Deposits */}
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block truncate">
-              {t.profile?.deposits || 'Total Deposits'}
-            </span>
-            <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
-              {formatCurrency(accounting.deposits)}
-            </p>
-            <p className="text-[10px] text-slate-500 mt-0.5">
-              Paid to mess fund
-            </p>
-          </div>
+        const bazarRangeText =
+          accounting.bazarDateRange && accounting.bazarDateRange !== 'No assigned schedule'
+            ? accounting.bazarDateRange
+            : activeSchedule
+            ? activeSchedule.formattedRange
+            : 'No assigned schedule';
 
-          {/* Card 5: Allocated Shared & Fixed */}
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block truncate">
-              {t.profile?.allocatedCosts || 'Utilities / Rent'}
-            </span>
-            <p className="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1">
-              {formatCurrency(accounting.sharedExpenseCost + accounting.individualExpenseCost)}
-            </p>
-            <p className="text-[10px] text-slate-500 mt-0.5">
-              Fixed & extra costs
-            </p>
-          </div>
+        const bazarStatus =
+          accounting.bazarStatus ||
+          (bazarSchedules?.current?.length ? 'ONGOING' : bazarSchedules?.upcoming?.length ? 'UPCOMING' : null);
 
-          {/* Card 6: Due / Advance Balance */}
-          <div
-            className={`p-4 rounded-xl border shadow-2xs ${
-              accounting.dueAmount > 0
-                ? 'bg-rose-50/70 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
-                : accounting.advanceAmount > 0
-                ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
-                : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-300'
-            }`}
-          >
-            <span className="text-[11px] font-semibold block truncate">
-              {accounting.dueAmount > 0 ? 'Total Due (বাকি)' : accounting.advanceAmount > 0 ? 'Total Advance (পাওনা)' : 'Balanced'}
-            </span>
-            <p className="text-xl font-bold mt-1">
-              {accounting.dueAmount > 0
-                ? formatCurrency(accounting.dueAmount)
-                : accounting.advanceAmount > 0
-                ? formatCurrency(accounting.advanceAmount)
-                : '৳0.00'}
-            </p>
-            <p className="text-[10px] mt-0.5 opacity-80">
-              {accounting.dueAmount > 0 ? 'Payment pending' : accounting.advanceAmount > 0 ? 'Credit balance' : 'Zero balance'}
-            </p>
+        const totalFineValue = accounting.totalFine ?? fines?.totalFineAmount ?? 0;
+        const unpaidFineValue = accounting.unpaidFine ?? fines?.unpaidFineAmount ?? 0;
+
+        const monthlyBalanceValue =
+          accounting.monthlyBalance !== undefined
+            ? accounting.monthlyBalance
+            : (accounting.deposits + accounting.bazarContribution) - totalCostValue;
+
+        const overallBalanceValue =
+          accounting.overallBalance !== undefined
+            ? accounting.overallBalance
+            : accounting.netBalance;
+
+        return (
+          <div>
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-600" />
+                <span>আর্থিক ও মিল সারসংক্ষেপ (9 Financial & Activity Overview Cards)</span>
+              </h2>
+              <span className="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">
+                বর্তমান মিল রেট: <strong className="text-emerald-600 font-bold">৳{accounting.currentMealRate.toFixed(2)}</strong> / মিল
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              {/* Card 1: Total Joma (মোট জমা) */}
+              <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-emerald-500/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    1. Total Joma (মোট জমা)
+                  </span>
+                  <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
+                    <Wallet className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-2">
+                  {formatCurrency(totalJomaValue)}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 truncate" title={`Initial (৳${initialBalanceValue}) + Deposits (৳${accounting.deposits}) + Own Bazar (৳${accounting.bazarContribution})`}>
+                  Initial: ৳{initialBalanceValue} | Dep: ৳{accounting.deposits} | Bazar: ৳{accounting.bazarContribution}
+                </p>
+              </div>
+
+              {/* Card 2: Initial Balance (প্রারম্ভিক ব্যালেন্স) */}
+              <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-sky-500/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    2. Initial Balance (প্রারম্ভিক ব্যালেন্স)
+                  </span>
+                  <div className="w-7 h-7 rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-600 flex items-center justify-center">
+                    <Coins className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <p className="text-2xl font-black text-sky-600 dark:text-sky-400 mt-2">
+                  {formatCurrency(initialBalanceValue)}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  সিস্টেমে অন্তর্ভুক্ত পূর্ববর্তী জমার স্থিতি
+                </p>
+              </div>
+
+              {/* Card 3: Total Meals (মোট মিল) */}
+              <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-amber-500/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    3. Total Meals (মোট মিল)
+                  </span>
+                  <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center">
+                    <Utensils className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <p className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-2">
+                  {accounting.totalMeals} <span className="text-sm font-semibold text-slate-500">টি</span>
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  সকাল: {accounting.breakfast} | দুপুর: {accounting.lunch} | রাত: {accounting.dinner}
+                </p>
+              </div>
+
+              {/* Card 4: Today's Meals (আজকের মিল) */}
+              <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-teal-500/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    4. Today's Meals (আজকের মিল)
+                  </span>
+                  <div className="w-7 h-7 rounded-lg bg-teal-100 dark:bg-teal-950/60 text-teal-600 flex items-center justify-center">
+                    <Clock className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <p className="text-2xl font-black text-teal-600 dark:text-teal-400 mt-2">
+                  {todayMealsCount} <span className="text-sm font-semibold text-slate-500">টি</span>
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  আজকের সক্রিয় মিল কাউন্ট (Dhaka Timezone)
+                </p>
+              </div>
+
+              {/* Card 5: Total Cost (মোট খরচ) */}
+              <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-rose-500/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    5. Total Cost (মোট খরচ)
+                  </span>
+                  <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center">
+                    <Receipt className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <p className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-2">
+                  {formatCurrency(totalCostValue)}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  মিল খরচ: ৳{accounting.mealCost.toFixed(0)} | অতিরিক্ত: ৳{(accounting.sharedExpenseCost + accounting.individualExpenseCost).toFixed(0)}
+                </p>
+              </div>
+
+              {/* Card 6: Bazar Date Range (বাজারের তারিখ) */}
+              <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-orange-500/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    6. Bazar Date Range (বাজার শিডিউল)
+                  </span>
+                  <div className="w-7 h-7 rounded-lg bg-orange-100 dark:bg-orange-950/60 text-orange-600 flex items-center justify-center">
+                    <ShoppingCart className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <p className="text-base sm:text-lg font-bold text-orange-600 dark:text-orange-400 mt-2 truncate" title={bazarRangeText}>
+                  {bazarRangeText}
+                </p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                    bazarStatus === 'ONGOING'
+                      ? 'bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300 animate-pulse'
+                      : bazarStatus === 'UPCOMING'
+                      ? 'bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                  }`}>
+                    {bazarStatus === 'ONGOING' ? 'চলমান বাজার' : bazarStatus === 'UPCOMING' ? 'আসন্ন শিডিউল' : 'তালিকাভুক্ত নয়'}
+                  </span>
+                  <span className="text-[11px] text-slate-500">মোট শিডিউল: {bazarSchedules?.all.length || 0}</span>
+                </div>
+              </div>
+
+              {/* Card 7: Total Fine (মোট জরিমানা) */}
+              <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-purple-500/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    7. Total Fine (মোট জরিমানা)
+                  </span>
+                  <div className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <p className="text-2xl font-black text-purple-600 dark:text-purple-400 mt-2">
+                  {formatCurrency(totalFineValue)}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  পরিশোধিত: ৳{(totalFineValue - unpaidFineValue)} | বকেয়া: ৳{unpaidFineValue}
+                </p>
+              </div>
+
+              {/* Card 8: Monthly Balance (চলতি মাসের ব্যালেন্স) */}
+              <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-indigo-500/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    8. Monthly Balance (চলতি মাস)
+                  </span>
+                  <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 flex items-center justify-center">
+                    <Calendar className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <p className={`text-2xl font-black mt-2 ${monthlyBalanceValue >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                  {monthlyBalanceValue >= 0 ? '+' : ''}{formatCurrency(monthlyBalanceValue)}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  চলতি মাসের জমা থেকে খরচের পার্থক্য ({monthlyBalanceValue >= 0 ? 'উদ্বৃত্ত/Surplus' : 'ঘাটতি/Deficit'})
+                </p>
+              </div>
+
+              {/* Card 9: Overall Balance (সর্বমোট স্থিতি) */}
+              <div className={`p-4 rounded-xl border shadow-2xs transition-colors ${
+                overallBalanceValue >= 0
+                  ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/80 hover:border-emerald-500'
+                  : 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-300 dark:border-rose-800/80 hover:border-rose-500'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    9. Overall Balance (সর্বমোট স্থিতি)
+                  </span>
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                    overallBalanceValue >= 0
+                      ? 'bg-emerald-200/70 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300'
+                      : 'bg-rose-200/70 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300'
+                  }`}>
+                    {overallBalanceValue >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+                  </div>
+                </div>
+                <p className={`text-2xl font-black mt-2 ${overallBalanceValue >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}`}>
+                  {overallBalanceValue >= 0 ? '+' : ''}{formatCurrency(overallBalanceValue)}
+                </p>
+                <p className="text-[11px] font-semibold mt-1 text-slate-700 dark:text-slate-300">
+                  {overallBalanceValue >= 0
+                    ? 'Advance (পাওনা - মেসের নিকট সদস্যের পাওনা)'
+                    : 'Due (বাকি - সদস্য কর্তৃক মেসকে প্রদেয়)'}
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Interactive Tabs for Historical Records */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
@@ -1227,8 +1487,21 @@ export function MemberProfileClient({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Profile Picture URL
+                  প্রোফাইল পিকচার (Profile Picture)
                 </label>
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      fileInputRef.current?.click();
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors cursor-pointer"
+                  >
+                    <UploadCloud className="w-3.5 h-3.5" />
+                    ডিভাইস থেকে আপলোড (Max 5MB)
+                  </button>
+                  <span className="text-[11px] text-slate-400">অথবা ছবির URL দিন:</span>
+                </div>
                 <input
                   type="url"
                   value={editAvatarUrl}
@@ -1494,6 +1767,116 @@ export function MemberProfileClient({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Direct Device Avatar Upload Confirmation Modal */}
+      {isAvatarUploadModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
+                  <Camera className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    প্রোফাইল ছবি প্রিভিউ (Avatar Preview)
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    ডিভাইস থেকে সরাসরি আপলোড (Max 5MB)
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAvatarUploadModalOpen(false);
+                  setSelectedAvatarFile(null);
+                  setAvatarPreviewUrl(null);
+                  setAvatarUploadError(null);
+                }}
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {avatarUploadError && (
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 text-xs font-medium flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+                  <span>{avatarUploadError}</span>
+                </div>
+              )}
+
+              {avatarPreviewUrl ? (
+                <div className="flex flex-col items-center justify-center gap-3 py-2">
+                  <div className="w-28 h-28 rounded-full border-4 border-emerald-500/40 overflow-hidden shadow-lg bg-slate-100 dark:bg-slate-800">
+                    <img
+                      src={avatarPreviewUrl}
+                      alt="Avatar Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-medium text-slate-900 dark:text-slate-100 truncate max-w-xs">
+                      {selectedAvatarFile?.name}
+                    </p>
+                    <p className="text-[10px] text-slate-500">
+                      ফাইলের সাইজ: {selectedAvatarFile ? (selectedAvatarFile.size / 1024).toFixed(1) : 0} KB
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-6 text-slate-400 text-xs">
+                  কোন ছবি নির্বাচন করা হয়নি
+                </div>
+              )}
+
+              <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  অন্য ছবি
+                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAvatarUploadModalOpen(false);
+                      setSelectedAvatarFile(null);
+                      setAvatarPreviewUrl(null);
+                      setAvatarUploadError(null);
+                    }}
+                    className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  >
+                    বাতিল
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isUploadingAvatar || !selectedAvatarFile || !!avatarUploadError}
+                    onClick={handleUploadAndSaveAvatar}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {isUploadingAvatar ? (
+                      <>
+                        <Clock className="w-3.5 h-3.5 animate-spin" />
+                        <span>আপলোড হচ্ছে...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>সেভ করুন</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

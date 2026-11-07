@@ -28,6 +28,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n/context';
 import { logoutAction } from '@/app/actions/auth';
+import { MemberNavigationDropdown, INITIAL_14_MEMBERS } from '@/components/navigation/member-navigation-dropdown';
+import { MemberOption } from './header';
 
 interface SidebarProps {
   userRole?: string;
@@ -39,6 +41,8 @@ interface SidebarProps {
   isManager?: boolean;
   currentManagerName?: string;
   primaryAdminName?: string;
+  membersList?: MemberOption[];
+  activeMemberId?: string;
   onClose?: () => void;
 }
 
@@ -52,10 +56,14 @@ export function Sidebar({
   isManager = false,
   currentManagerName = 'Tanvir',
   primaryAdminName = 'Mohammad Tarek Hossen',
+  membersList = [],
+  activeMemberId,
   onClose,
 }: SidebarProps) {
   const pathname = usePathname();
   const { t } = useI18n();
+
+  const effectiveMembers = membersList && membersList.length > 0 ? membersList : INITIAL_14_MEMBERS;
 
   // Any management authority (Primary Admin, Shared Admin, or Manager) has operational nav
   const hasManagerAccess = isPrimaryAdmin || isAdmin || isManager;
@@ -80,6 +88,7 @@ export function Sidebar({
   // Limited Navigation for General Members (only allowed actions)
   const memberNav = [
     { name: t.nav?.dashboard || 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Members Directory', href: '/members', icon: Users },
     { name: t.nav?.myProfile || 'My Profile', href: '/profile', icon: UserCheck },
     { name: t.nav?.dailyMeals || 'Daily Meals', href: '/meals', icon: Utensils },
     { name: t.nav?.bazarExpenses || 'Bazar Schedule', href: '/bazar', icon: ShoppingCart },
@@ -185,6 +194,20 @@ export function Sidebar({
       {/* Navigation Links */}
       <nav className="flex-1 px-3 py-1 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
+          if (item.href === '/members') {
+            return (
+              <MemberNavigationDropdown
+                key={item.href}
+                variant="sidebar"
+                members={effectiveMembers}
+                activeMemberId={activeMemberId}
+                isManagement={hasManagerAccess}
+                isActiveRoute={pathname.startsWith('/members')}
+                onClose={onClose}
+              />
+            );
+          }
+
           const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(`${item.href}/`));
           const Icon = item.icon;
 

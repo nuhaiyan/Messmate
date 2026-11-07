@@ -57,10 +57,12 @@ export function DashboardShell({
             isManager={isManager}
             currentManagerName={currentManagerName}
             primaryAdminName={primaryAdminName}
+            membersList={membersList}
+            activeMemberId={activeMemberId}
           />
         </div>
 
-        {/* Mobile Side Panel (Drawer) - Layered at z-[100] with backdrop so BottomNav stays cleanly underneath */}
+        {/* Mobile Side Panel (Drawer) */}
         {mobileMenuOpen && (
           <div className="fixed inset-0 z-[100] flex md:hidden">
             <div
@@ -78,6 +80,8 @@ export function DashboardShell({
                 isManager={isManager}
                 currentManagerName={currentManagerName}
                 primaryAdminName={primaryAdminName}
+                membersList={membersList}
+                activeMemberId={activeMemberId}
                 onClose={() => setMobileMenuOpen(false)}
               />
             </div>

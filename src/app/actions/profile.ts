@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth/session';
 import { getMonthAccountingData } from '@/app/actions/closing';
 import { logActivity } from '@/lib/audit/audit-logger';
-import { computeScheduleStatus, formatScheduleRange, toDhakaDateString } from '@/lib/bazar/schedule-utils';
+import { computeScheduleStatus, formatScheduleRange, toDhakaDateString, getDhakaTodayString } from '@/lib/bazar/schedule-utils';
 
 function safeRevalidate(path: string) {
   try {
@@ -189,30 +189,71 @@ export async function getMemberProfileDataAction(params?: {
         notes: f.notes,
       })),
     },
-    accounting: {
-      totalMeals: personalAccount ? Number(personalAccount.totalMeals.toString()) : 0,
-      breakfast: bfSum,
-      lunch: lnSum,
-      dinner: dnSum,
-      mealCost: personalAccount ? Number(personalAccount.mealCost.toString()) : 0,
-      currentMealRate: monthAccounts.calculationResult.isMealRateAvailable
-        ? Number(monthAccounts.calculationResult.mealRate.toString())
-        : 0,
-      bazarContribution: personalAccount ? Number(personalAccount.personalPayments.toString()) : 0,
-      deposits: personalAccount ? Number(personalAccount.deposits.toString()) : 0,
-      individualExpenseCost: personalAccount ? Number(personalAccount.individualExpenseCost.toString()) : 0,
-      sharedExpenseCost: personalAccount ? Number(personalAccount.sharedExpenseCost.toString()) : 0,
-      totalCost: personalAccount ? Number(personalAccount.totalCost.toString()) : 0,
-      netBalance: personalAccount ? Number(personalAccount.closingBalance.toString()) : 0,
-      dueAmount: personalAccount ? Number(personalAccount.dueAmount.toString()) : 0,
-      advanceAmount: personalAccount ? Number(personalAccount.advanceAmount.toString()) : 0,
-      totalFine: totalFineAmount,
-      balanceStatus: personalAccount?.isDue
-        ? 'DUE'
-        : personalAccount?.isAdvance
-        ? 'ADVANCE'
-        : 'BALANCED',
-    },
+    accounting: (() => {
+      const dhakaTodayStr = getDhakaTodayString();
+      const todayMeal = mealEntries.find(
+        (m) => toDhakaDateString(m.date) === dhakaTodayStr
+      );
+      const todayMealsCount = todayMeal ? Number(todayMeal.totalMeals) : 0;
+
+      const initialOpeningBalance = Number(member.initialOpeningBalance || 0);
+      const memberDeposits = personalAccount ? Number(personalAccount.deposits.toString()) : 0;
+      const memberBazarContribution = personalAccount ? Number(personalAccount.personalPayments.toString()) : 0;
+      const memberMealCost = personalAccount ? Number(personalAccount.mealCost.toString()) : 0;
+      const memberSharedExpenseCost = personalAccount ? Number(personalAccount.sharedExpenseCost.toString()) : 0;
+      const memberIndividualExpenseCost = personalAccount ? Number(personalAccount.individualExpenseCost.toString()) : 0;
+      const memberTotalCost = personalAccount ? Number(personalAccount.totalCost.toString()) : 0;
+      const memberPreviousBalance = personalAccount ? Number(personalAccount.openingBalance.toString()) : initialOpeningBalance;
+
+      // Exact Formula: Total Joma = Initial Balance + Deposits + Eligible Own-Pocket Bazar Payments
+      const totalJoma = initialOpeningBalance + memberDeposits + memberBazarContribution;
+
+      // Monthly Balance: Current month additions (Deposits + Own-Pocket Bazar) minus Current month costs
+      const monthlyBalance = (memberDeposits + memberBazarContribution) - memberTotalCost;
+
+      // Overall Balance: Cumulative balance across months (incorporating carry-forward)
+      const overallBalance = personalAccount ? Number(personalAccount.closingBalance.toString()) : initialOpeningBalance;
+
+      const activeOrNextSchedule = currentSchedules[0] || upcomingSchedules[0] || null;
+      const bazarDateRange = activeOrNextSchedule ? activeOrNextSchedule.formattedRange : 'No assigned schedule';
+
+      return {
+        // 9 Key Overview Fields
+        totalJoma,
+        initialBalance: initialOpeningBalance,
+        totalMeals: personalAccount ? Number(personalAccount.totalMeals.toString()) : 0,
+        todayMeals: todayMealsCount,
+        totalCost: memberTotalCost,
+        bazarDateRange,
+        bazarStatus: activeOrNextSchedule ? activeOrNextSchedule.status : null,
+        totalFine: totalFineAmount,
+        unpaidFine: unpaidFineAmount,
+        monthlyBalance,
+        overallBalance,
+
+        // Additional detailed breakdown fields
+        breakfast: bfSum,
+        lunch: lnSum,
+        dinner: dnSum,
+        mealCost: memberMealCost,
+        currentMealRate: monthAccounts.calculationResult.isMealRateAvailable
+          ? Number(monthAccounts.calculationResult.mealRate.toString())
+          : 0,
+        bazarContribution: memberBazarContribution,
+        deposits: memberDeposits,
+        individualExpenseCost: memberIndividualExpenseCost,
+        sharedExpenseCost: memberSharedExpenseCost,
+        netBalance: overallBalance,
+        previousBalance: memberPreviousBalance,
+        dueAmount: personalAccount ? Number(personalAccount.dueAmount.toString()) : 0,
+        advanceAmount: personalAccount ? Number(personalAccount.advanceAmount.toString()) : 0,
+        balanceStatus: personalAccount?.isDue
+          ? 'DUE'
+          : personalAccount?.isAdvance
+          ? 'ADVANCE'
+          : 'BALANCED',
+      };
+    })(),
     recentMeals: mealEntries.map((m) => ({
       id: m.id,
       date: m.date.toISOString(),

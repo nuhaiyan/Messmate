@@ -12,13 +12,11 @@ interface MembersPageProps {
 export default async function MembersPage({ searchParams }: MembersPageProps) {
   const session = await requireAuth();
 
-  // Protect Admin/Manager panel: regular members cannot access member administration
-  if (!session.isPrimaryAdmin && !session.isAdmin && !session.isManager) {
-    redirect('/my-ledger');
-  }
+  const isManagement = session.isPrimaryAdmin || session.isAdmin || session.isManager;
+  const isGeneralMember = !isManagement;
 
   const sp = await searchParams;
-  const initialTab = sp.tab || 'members';
+  const initialTab = isGeneralMember ? 'members' : (sp.tab || 'members');
 
   const mess = await prisma.mess.findUnique({
     where: { id: session.messId },
@@ -59,21 +57,21 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
     id: m.id,
     userId: m.userId,
     fullName: m.fullName,
-    phone: m.phone,
-    email: m.email,
+    phone: isManagement || m.id === session.memberId ? m.phone : 'Protected',
+    email: isManagement || m.id === session.memberId ? m.email : null,
     roomNumber: m.roomNumber,
     joiningDate: m.joiningDate.toISOString(),
     leavingDate: m.leavingDate ? m.leavingDate.toISOString() : null,
     isActive: m.isActive,
     isArchived: m.isArchived,
-    initialOpeningBalance: Number(m.initialOpeningBalance),
+    initialOpeningBalance: isManagement || m.id === session.memberId ? Number(m.initialOpeningBalance) : 0,
     isPrimaryAdmin: m.isPrimaryAdmin,
     isAdmin: m.isAdmin,
     isManager: m.isManager,
     adminGrantedAt: m.adminGrantedAt ? m.adminGrantedAt.toISOString() : null,
     role: m.isPrimaryAdmin ? 'PRIMARY_ADMIN' : m.isAdmin ? 'ADMIN' : m.isManager ? 'MANAGER' : 'MEMBER',
     loginEnabled: m.user.isActive,
-    hasPassword: Boolean(m.user.passwordHash && m.user.passwordHash.length > 0),
+    hasPassword: isManagement ? Boolean(m.user.passwordHash && m.user.passwordHash.length > 0) : false,
   }));
 
   const membersOptions = members

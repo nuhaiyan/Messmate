@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useTransition } from 'react';
+import React, { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import {
@@ -22,11 +22,15 @@ import {
   Megaphone,
   BarChart3,
   Settings,
+  Search,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/context';
 import { PhoneNotificationButton } from '@/components/notifications/phone-notification-button';
 import { useTheme } from '@/lib/theme/context';
 import { logoutAction } from '@/app/actions/auth';
+import { MemberNavigationDropdown, INITIAL_14_MEMBERS } from '@/components/navigation/member-navigation-dropdown';
+import { GlobalSearchDialog } from '@/components/navigation/global-search-dialog';
+import { QuickActionsMenu } from '@/components/navigation/quick-actions-menu';
 
 export interface MemberOption {
   id: string;
@@ -35,6 +39,9 @@ export interface MemberOption {
   isAdmin: boolean;
   isManager: boolean;
   avatarUrl?: string | null;
+  isActive?: boolean;
+  roomNumber?: string | null;
+  phone?: string | null;
 }
 
 interface HeaderProps {
@@ -70,6 +77,7 @@ export function Header({
   const { language, setLanguage, t } = useI18n();
   const { theme, toggleTheme } = useTheme();
   const [isPending, startTransition] = useTransition();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const [year, month] = e.target.value.split('-');
@@ -87,7 +95,8 @@ export function Header({
   ];
 
   const currentSelection = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
-  const currentActiveMember = membersList.find((m) => m.id === activeMemberId);
+  const effectiveMembers = membersList && membersList.length > 0 ? membersList : INITIAL_14_MEMBERS;
+  const currentActiveMember = effectiveMembers.find((m) => m.id === activeMemberId);
 
   const hasManagerAccess = isPrimaryAdmin || isAdmin || isManager;
   const isStrictAdmin = isPrimaryAdmin || isAdmin;
@@ -106,7 +115,8 @@ export function Header({
       name: language === 'bn' ? 'সদস্যবৃন্দ' : 'Members',
       href: '/members',
       icon: Users,
-      show: hasManagerAccess,
+      show: true, // Visible to all 14 members! General members see directory and open own profile.
+      isDropdown: true,
     },
     {
       id: 'meals',
@@ -199,12 +209,28 @@ export function Header({
             <Crown className="w-3.5 h-3.5 text-amber-500" />
             <span>Manager: <strong className="font-semibold">{currentManagerName}</strong></span>
           </div>
+
+          {/* Global Search Shortcut Button */}
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            title="Global Search across Members, Bazar, Notices, and Finances (Ctrl+K)"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-500 dark:text-slate-400 transition-colors cursor-pointer"
+          >
+            <Search className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+            <span className="hidden sm:inline">Search...</span>
+            <kbd className="hidden md:inline-block font-mono text-[10px] bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded px-1 text-slate-400">
+              Ctrl+K
+            </kbd>
+          </button>
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
+          {/* Quick Actions Shortcuts Dropdown */}
+          <QuickActionsMenu isManagement={hasManagerAccess} activeMemberId={activeMemberId} />
+
           {/* Meal rate pill */}
           {currentMealRate !== undefined && (
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/50 rounded-full text-xs font-semibold">
+            <div className="hidden xl:flex items-center gap-1.5 px-3 py-1 bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/50 rounded-full text-xs font-semibold">
               <TrendingUp className="w-3.5 h-3.5 text-orange-500" />
               <span>
                 {t.dashboard?.currentMealRate || 'Meal Rate'}: <strong className="text-orange-900 dark:text-orange-200 font-bold">৳{currentMealRate}</strong>
@@ -302,6 +328,20 @@ export function Header({
           {navModules
             .filter((m) => m.show)
             .map((item) => {
+              // If item is Members, render the Member Navigation Dropdown popover
+              if (item.isDropdown && item.id === 'members') {
+                return (
+                  <MemberNavigationDropdown
+                    key={item.id}
+                    variant="top-nav"
+                    members={effectiveMembers}
+                    activeMemberId={activeMemberId}
+                    isManagement={hasManagerAccess}
+                    isActiveRoute={pathname.startsWith('/members')}
+                  />
+                );
+              }
+
               const isActive =
                 pathname === item.href ||
                 (item.href !== '/dashboard' && pathname.startsWith(item.href));
@@ -324,6 +364,15 @@ export function Header({
             })}
         </div>
       </nav>
+
+      {/* Global Search Dialog Modal */}
+      <GlobalSearchDialog
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        isManagement={hasManagerAccess}
+        activeMemberId={activeMemberId}
+        members={effectiveMembers}
+      />
     </div>
   );
 }
