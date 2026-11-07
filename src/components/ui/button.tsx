@@ -13,11 +13,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const variants = {
       default: 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700 active:bg-emerald-800',
       emerald: 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700 active:bg-emerald-800',
-      destructive: 'bg-red-600 text-white shadow-xs hover:bg-red-700 active:bg-red-800',
-      outline: 'border border-slate-300 bg-white shadow-xs hover:bg-slate-50 text-slate-700 active:bg-slate-100',
-      secondary: 'bg-slate-100 text-slate-900 shadow-xs hover:bg-slate-200 active:bg-slate-300',
-      ghost: 'hover:bg-slate-100 text-slate-700 hover:text-slate-900',
-      link: 'text-emerald-600 underline-offset-4 hover:underline',
+      destructive: 'bg-rose-600 text-white shadow-xs hover:bg-rose-700 active:bg-rose-800',
+      outline: 'border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 active:bg-slate-100 dark:active:bg-slate-600',
+      secondary: 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs hover:bg-slate-200 dark:hover:bg-slate-700 active:bg-slate-300',
+      ghost: 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100',
+      link: 'text-emerald-600 dark:text-emerald-400 underline-offset-4 hover:underline',
     };
 
     const sizes = {

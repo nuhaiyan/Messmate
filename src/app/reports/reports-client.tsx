@@ -92,22 +92,22 @@ export function ReportsClient({ data }: { data: ReportsData }) {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            <BarChart3 className="w-6 h-6 text-emerald-600" />
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <BarChart3 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             Financial Reports &amp; Analytics
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             Export official monthly statements, meal audits, and expense breakdowns for {monthName}
           </p>
         </div>
 
         <div className="flex items-center gap-2 no-print">
           <Button variant="outline" size="sm" onClick={handleExportExcel} className="flex items-center gap-1.5">
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             Excel (.xlsx)
           </Button>
           <Button variant="outline" size="sm" onClick={handleExportCsv} className="flex items-center gap-1.5">
-            <Download className="w-4 h-4 text-blue-600" />
+            <Download className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             CSV
           </Button>
           <Button variant="outline" size="sm" onClick={() => window.print()} className="flex items-center gap-1.5">
@@ -118,7 +118,7 @@ export function ReportsClient({ data }: { data: ReportsData }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 overflow-x-auto no-print pb-px">
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 overflow-x-auto no-print pb-px">
         {[
           { id: 'closing', label: '1. Monthly Closing Statement' },
           { id: 'meals', label: '2. Monthly Meal Audit' },
@@ -132,8 +132,8 @@ export function ReportsClient({ data }: { data: ReportsData }) {
             onClick={() => setActiveTab(tab.id as any)}
             className={`px-4 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-all cursor-pointer ${
               activeTab === tab.id
-                ? 'border-emerald-600 text-emerald-700 bg-white shadow-2xs rounded-t-lg'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-white dark:bg-slate-800 shadow-2xs rounded-t-lg font-bold'
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             {tab.label}
@@ -146,18 +146,18 @@ export function ReportsClient({ data }: { data: ReportsData }) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-base font-semibold text-slate-900">
+              <CardTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
                 Official Monthly Closing Statement – {monthName}
               </CardTitle>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Summary: Total Meals {data.closingStatement.totalMeals} • Total Bazar {formatCurrency(data.closingStatement.totalBazar)} • Meal Rate ৳{data.closingStatement.mealRate}
               </p>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-600">
-                <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
+              <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                <thead className="bg-slate-50 dark:bg-slate-800/70 text-xs uppercase text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="py-3 px-4">Member Name</th>
                     <th className="py-3 px-4">Meals</th>
@@ -167,15 +167,15 @@ export function ReportsClient({ data }: { data: ReportsData }) {
                     <th className="py-3 px-4 text-right">Closing Balance (৳)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {data.closingStatement.members.map((m, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-4 font-semibold text-slate-900">{m.member}</td>
-                      <td className="py-3 px-4">{m.meals}</td>
-                      <td className="py-3 px-4 font-medium text-slate-700">{formatCurrency(m.mealCost)}</td>
-                      <td className="py-3 px-4 text-slate-600">{formatCurrency(m.otherCost)}</td>
-                      <td className="py-3 px-4 text-emerald-600 font-medium">{formatCurrency(m.deposits)}</td>
-                      <td className="py-3 px-4 text-right font-bold text-slate-900">
+                    <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100">{m.member}</td>
+                      <td className="py-3 px-4 text-slate-800 dark:text-slate-200">{m.meals}</td>
+                      <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">{formatCurrency(m.mealCost)}</td>
+                      <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{formatCurrency(m.otherCost)}</td>
+                      <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-medium">{formatCurrency(m.deposits)}</td>
+                      <td className="py-3 px-4 text-right font-bold text-slate-900 dark:text-slate-100">
                         {formatCurrency(Math.abs(m.balance))} {m.balance >= 0 ? '(Adv)' : '(Due)'}
                       </td>
                     </tr>
@@ -191,26 +191,26 @@ export function ReportsClient({ data }: { data: ReportsData }) {
       {activeTab === 'meals' && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-slate-900">
+            <CardTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
               Monthly Meal Consumption by Member
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-600">
-                <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
+              <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                <thead className="bg-slate-50 dark:bg-slate-800/70 text-xs uppercase text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="py-3 px-4">Member Name</th>
                     <th className="py-3 px-4">Total Meals Consumed</th>
                     <th className="py-3 px-4 text-right">Calculated Meal Cost (৳)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {data.monthlyMealsSummary.map((m, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/70">
-                      <td className="py-3 px-4 font-semibold text-slate-900">{m.member}</td>
-                      <td className="py-3 px-4 font-bold text-slate-800">{m.totalMeals}</td>
-                      <td className="py-3 px-4 text-right font-bold text-emerald-700">
+                    <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
+                      <td className="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100">{m.member}</td>
+                      <td className="py-3 px-4 font-bold text-slate-800 dark:text-slate-200">{m.totalMeals}</td>
+                      <td className="py-3 px-4 text-right font-bold text-emerald-700 dark:text-emerald-400">
                         {formatCurrency(m.mealCost)}
                       </td>
                     </tr>
@@ -226,14 +226,14 @@ export function ReportsClient({ data }: { data: ReportsData }) {
       {activeTab === 'bazar' && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-slate-900">
+            <CardTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
               Bazar Expense Transaction Log
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-600">
-                <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
+              <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                <thead className="bg-slate-50 dark:bg-slate-800/70 text-xs uppercase text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Item Title</th>
@@ -243,15 +243,15 @@ export function ReportsClient({ data }: { data: ReportsData }) {
                     <th className="py-3 px-4 text-right">Amount (৳)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {data.bazarData.map((b, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/70">
-                      <td className="py-3 px-4 text-xs">{b.date}</td>
-                      <td className="py-3 px-4 font-semibold text-slate-900">{b.item}</td>
-                      <td className="py-3 px-4">{b.category}</td>
-                      <td className="py-3 px-4 text-xs font-semibold">{b.source}</td>
-                      <td className="py-3 px-4 text-xs text-slate-700">{b.payer}</td>
-                      <td className="py-3 px-4 text-right font-bold text-slate-900">{formatCurrency(b.amount)}</td>
+                    <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
+                      <td className="py-3 px-4 text-xs text-slate-600 dark:text-slate-400">{b.date}</td>
+                      <td className="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100">{b.item}</td>
+                      <td className="py-3 px-4 text-slate-700 dark:text-slate-300">{b.category}</td>
+                      <td className="py-3 px-4 text-xs font-semibold text-slate-600 dark:text-slate-400">{b.source}</td>
+                      <td className="py-3 px-4 text-xs text-slate-700 dark:text-slate-300">{b.payer}</td>
+                      <td className="py-3 px-4 text-right font-bold text-slate-900 dark:text-slate-100">{formatCurrency(b.amount)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -265,14 +265,14 @@ export function ReportsClient({ data }: { data: ReportsData }) {
       {activeTab === 'deposits' && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-slate-900">
+            <CardTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
               Member Fund Deposits Report
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-600">
-                <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
+              <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                <thead className="bg-slate-50 dark:bg-slate-800/70 text-xs uppercase text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Member Name</th>
@@ -281,14 +281,14 @@ export function ReportsClient({ data }: { data: ReportsData }) {
                     <th className="py-3 px-4 text-right">Amount (৳)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {data.depositsData.map((d, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/70">
-                      <td className="py-3 px-4 text-xs">{d.date}</td>
-                      <td className="py-3 px-4 font-semibold text-slate-900">{d.member}</td>
-                      <td className="py-3 px-4 text-xs font-semibold text-emerald-700">{d.method}</td>
-                      <td className="py-3 px-4 font-mono text-xs">{d.tx || '—'}</td>
-                      <td className="py-3 px-4 text-right font-bold text-emerald-700">{formatCurrency(d.amount)}</td>
+                    <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
+                      <td className="py-3 px-4 text-xs text-slate-600 dark:text-slate-400">{d.date}</td>
+                      <td className="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100">{d.member}</td>
+                      <td className="py-3 px-4 text-xs font-semibold text-emerald-700 dark:text-emerald-400">{d.method}</td>
+                      <td className="py-3 px-4 font-mono text-xs text-slate-600 dark:text-slate-400">{d.tx || '—'}</td>
+                      <td className="py-3 px-4 text-right font-bold text-emerald-700 dark:text-emerald-400">{formatCurrency(d.amount)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -302,14 +302,14 @@ export function ReportsClient({ data }: { data: ReportsData }) {
       {activeTab === 'dues' && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-slate-900">
+            <CardTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
               Member Outstanding Dues &amp; Advances Report
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-600">
-                <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
+              <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                <thead className="bg-slate-50 dark:bg-slate-800/70 text-xs uppercase text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="py-3 px-4">Member Name</th>
                     <th className="py-3 px-4">Status</th>
@@ -317,21 +317,21 @@ export function ReportsClient({ data }: { data: ReportsData }) {
                     <th className="py-3 px-4 text-right">Due Amount (৳)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {data.duesAdvancesData.map((d, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/70">
-                      <td className="py-3 px-4 font-semibold text-slate-900">{d.member}</td>
+                    <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
+                      <td className="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100">{d.member}</td>
                       <td className="py-3 px-4">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                          d.status === 'Advance' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
+                          d.status === 'Advance' ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
                         }`}>
                           {d.status}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-right font-bold text-emerald-600">
+                      <td className="py-3 px-4 text-right font-bold text-emerald-600 dark:text-emerald-400">
                         {d.advance > 0 ? formatCurrency(d.advance) : '—'}
                       </td>
-                      <td className="py-3 px-4 text-right font-bold text-rose-600">
+                      <td className="py-3 px-4 text-right font-bold text-rose-600 dark:text-rose-400">
                         {d.due > 0 ? formatCurrency(d.due) : '—'}
                       </td>
                     </tr>
@@ -347,24 +347,24 @@ export function ReportsClient({ data }: { data: ReportsData }) {
       {activeTab === 'categories' && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-slate-900">
+            <CardTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
               Category-wise Expense Breakdown
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-600">
-                <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
+              <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                <thead className="bg-slate-50 dark:bg-slate-800/70 text-xs uppercase text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="py-3 px-4">Expense Category</th>
                     <th className="py-3 px-4 text-right">Total Expenditure (৳)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {data.categoryExpenses.map((c, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/70">
-                      <td className="py-3 px-4 font-semibold text-slate-900">{c.category}</td>
-                      <td className="py-3 px-4 text-right font-bold text-slate-800">{formatCurrency(c.amount)}</td>
+                    <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
+                      <td className="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100">{c.category}</td>
+                      <td className="py-3 px-4 text-right font-bold text-slate-800 dark:text-slate-200">{formatCurrency(c.amount)}</td>
                     </tr>
                   ))}
                 </tbody>

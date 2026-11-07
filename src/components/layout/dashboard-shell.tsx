@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Sidebar } from './sidebar';
 import { Header, MemberOption } from './header';
+import { BottomNav } from './bottom-nav';
 import { I18nProvider } from '@/lib/i18n/context';
 
 interface DashboardShellProps {
@@ -95,9 +96,11 @@ export function DashboardShell({
             currentManagerName={currentManagerName}
             primaryAdminName={primaryAdminName}
           />
-          <main className="flex-1 p-3 sm:p-5 md:p-8 max-w-7xl w-full mx-auto">
+          <main className="flex-1 p-3 sm:p-5 md:p-8 max-w-7xl w-full mx-auto pb-24 md:pb-8">
             {children}
           </main>
+          {/* Mobile Bottom Navigation Bar */}
+          <BottomNav />
         </div>
       </div>
     </I18nProvider>

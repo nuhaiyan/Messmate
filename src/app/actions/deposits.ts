@@ -92,6 +92,65 @@ export async function addDepositAction(data: {
   return { success: true, depositId: deposit.id };
 }
 
+export async function updateDepositAction(
+  depositId: string,
+  data: {
+    depositDate: string;
+    amount: number;
+    paymentMethod: 'CASH' | 'BKASH' | 'NAGAD' | 'BANK_TRANSFER' | 'OTHER';
+    transactionId?: string;
+    notes?: string;
+  }
+) {
+  const session = await requireManager();
+
+  const deposit = await prisma.deposit.findUnique({
+    where: { id: depositId },
+    include: { period: true, member: true },
+  });
+
+  if (!deposit) return { success: false, error: 'Deposit record not found.' };
+  if (deposit.period.isClosed) {
+    return { success: false, error: 'Cannot edit deposit. This month is closed and locked.' };
+  }
+
+  const newDate = new Date(`${data.depositDate}T12:00:00Z`);
+
+  const updated = await prisma.deposit.update({
+    where: { id: depositId },
+    data: {
+      depositDate: newDate,
+      amount: Number(data.amount),
+      paymentMethod: data.paymentMethod,
+      transactionId: data.transactionId || null,
+      notes: data.notes || null,
+    },
+  });
+
+  await logActivity({
+    messId: session.messId,
+    userId: session.userId,
+    action: 'DEPOSIT_UPDATED',
+    entity: 'DEPOSIT',
+    entityId: depositId,
+    details: {
+      memberName: deposit.member.fullName,
+      previousAmount: Number(deposit.amount),
+      newAmount: Number(data.amount),
+      previousDate: deposit.depositDate.toISOString().split('T')[0],
+      newDate: data.depositDate,
+      editedBy: session.name,
+    },
+    reason: `Deposit updated by Admin/Manager ${session.name}`,
+  });
+
+  revalidatePath('/deposits');
+  revalidatePath('/dashboard');
+  revalidatePath('/reports');
+  revalidatePath('/my-ledger');
+  return { success: true };
+}
+
 export async function deleteDepositAction(depositId: string) {
   const session = await requireManager();
 

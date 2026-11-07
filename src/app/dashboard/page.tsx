@@ -5,6 +5,8 @@ import { getMonthAccountingData } from '@/app/actions/closing';
 import { DashboardShell } from '@/components/layout/dashboard-shell';
 import { InteractiveDashboardCards } from '@/components/dashboard/interactive-dashboard-cards';
 import { DashboardCharts } from '@/components/dashboard/dashboard-charts';
+import { LatestNoticeBanner } from '@/components/dashboard/latest-notice-banner';
+import { NoticeCategory } from '@/app/actions/notices';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -156,6 +158,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     take: 3,
     include: { creator: { select: { name: true } } },
   });
+
+  const latestNoticeItem = recentNotices.length > 0 ? {
+    id: recentNotices[0].id,
+    title: recentNotices[0].title,
+    content: recentNotices[0].content,
+    category: recentNotices[0].category as NoticeCategory,
+    isPinned: recentNotices[0].isPinned,
+    publishedAt: recentNotices[0].publishedAt.toISOString(),
+    creatorName: recentNotices[0].creator?.name || 'Mess Administration',
+  } : null;
 
   // Recent Community Messages
   const recentMessages = await prisma.message.findMany({
@@ -320,6 +332,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </div>
         </div>
       </div>
+
+      {/* LATEST BILLBOARD NOTICE HIGHLIGHT BANNER */}
+      <LatestNoticeBanner latestNotice={latestNoticeItem} />
 
       {/* 2. 10 INTERACTIVE STATISTICS CARDS (Warm Orange Accent & Clean SaaS Hierarchy) */}
       <div className="mb-6">

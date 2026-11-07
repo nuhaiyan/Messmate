@@ -120,6 +120,95 @@ export async function addAdditionalExpenseAction(data: {
   return { success: true, expenseId: expense.id };
 }
 
+export async function updateAdditionalExpenseAction(
+  expenseId: string,
+  data: {
+    date: string;
+    title: string;
+    amount: number;
+    category: string;
+    expenseType: 'SHARED' | 'INDIVIDUAL';
+    allocationMethod?: 'EQUAL' | 'CUSTOM' | 'PROPORTIONAL';
+    targetMemberId?: string;
+    description?: string;
+  }
+) {
+  const session = await requireManager();
+
+  const expense = await prisma.expense.findUnique({
+    where: { id: expenseId },
+    include: { period: true },
+  });
+
+  if (!expense) return { success: false, error: 'Expense record not found.' };
+  if (expense.period.isClosed) {
+    return { success: false, error: 'Cannot edit expense in a closed month.' };
+  }
+
+  const dateObj = new Date(`${data.date}T12:00:00Z`);
+
+  await prisma.expense.update({
+    where: { id: expenseId },
+    data: {
+      date: dateObj,
+      title: data.title,
+      amount: Number(data.amount),
+      category: data.category,
+      expenseType: data.expenseType,
+      allocationMethod: data.expenseType === 'SHARED' ? (data.allocationMethod || 'EQUAL') : null,
+      targetMemberId: data.expenseType === 'INDIVIDUAL' ? data.targetMemberId : null,
+      description: data.description || null,
+    },
+  });
+
+  // Re-calculate shared expense allocations if shared
+  await prisma.sharedExpenseAllocation.deleteMany({
+    where: { expenseId },
+  });
+
+  if (data.expenseType === 'SHARED') {
+    const activeMembers = await prisma.messMember.findMany({
+      where: { messId: session.messId, isActive: true, isArchived: false },
+    });
+
+    if (activeMembers.length > 0) {
+      const perHead = Number((Number(data.amount) / activeMembers.length).toFixed(2));
+      for (const m of activeMembers) {
+        await prisma.sharedExpenseAllocation.create({
+          data: {
+            expenseId: expense.id,
+            memberId: m.id,
+            amount: perHead,
+            sharePercentage: 100 / activeMembers.length,
+          },
+        });
+      }
+    }
+  }
+
+  await logActivity({
+    messId: session.messId,
+    userId: session.userId,
+    action: 'ADDITIONAL_EXPENSE_UPDATED',
+    entity: 'EXPENSE',
+    entityId: expenseId,
+    details: {
+      previousTitle: expense.title,
+      previousAmount: Number(expense.amount),
+      newTitle: data.title,
+      newAmount: Number(data.amount),
+      type: data.expenseType,
+      editedBy: session.name,
+    },
+    reason: `Additional expense updated by ${session.name}`,
+  });
+
+  revalidatePath('/additional-expenses');
+  revalidatePath('/dashboard');
+  revalidatePath('/reports');
+  return { success: true };
+}
+
 export async function deleteAdditionalExpenseAction(expenseId: string) {
   const session = await requireManager();
 

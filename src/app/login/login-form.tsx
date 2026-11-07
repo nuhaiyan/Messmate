@@ -135,9 +135,9 @@ export function LoginForm({ members, messName, messLogoUrl }: LoginFormProps) {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
-        <div className="bg-white py-8 px-6 shadow-2xl rounded-2xl border border-slate-100 sm:px-10">
+        <div className="bg-white dark:bg-slate-900 py-8 px-6 shadow-2xl rounded-2xl border border-slate-100 dark:border-slate-800 sm:px-10">
           {/* Segmented Control / Tabs */}
-          <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl mb-6">
+          <div className="grid grid-cols-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-6">
             <button
               type="button"
               onClick={() => {
@@ -146,8 +146,8 @@ export function LoginForm({ members, messName, messLogoUrl }: LoginFormProps) {
               }}
               className={`py-2 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeTab === 'admin'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-xs'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
               <Crown className="w-4 h-4 text-amber-500" />
@@ -162,11 +162,11 @@ export function LoginForm({ members, messName, messLogoUrl }: LoginFormProps) {
               }}
               className={`py-2 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeTab === 'member'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-xs'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
-              <User className="w-4 h-4 text-emerald-600" />
+              <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>Member Portal</span>
             </button>
           </div>
@@ -206,7 +206,7 @@ export function LoginForm({ members, messName, messLogoUrl }: LoginFormProps) {
 
               {/* Admin Password Input Field */}
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                   অ্যাডমিন পাসওয়ার্ড (Admin Password)
                 </label>
                 <div className="relative">
@@ -219,12 +219,12 @@ export function LoginForm({ members, messName, messLogoUrl }: LoginFormProps) {
                     onChange={(e) => setAdminPassword(e.target.value)}
                     placeholder="Enter Admin Password"
                     disabled={isPending}
-                    className="w-full pl-9 pr-10 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-slate-900 bg-slate-50/50"
+                    className="w-full pl-9 pr-10 py-2.5 text-sm rounded-xl border border-slate-300 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all text-slate-900 dark:text-slate-100 bg-slate-50/50 dark:bg-slate-800 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                   <button
                     type="button"
                     onClick={() => setShowAdminPassword(!showAdminPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                   >
                     {showAdminPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -256,7 +256,7 @@ export function LoginForm({ members, messName, messLogoUrl }: LoginFormProps) {
             <form onSubmit={handleMemberLogin} className="space-y-4 animate-in fade-in duration-200">
               {/* Member Selection */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Select Member Account *
                 </label>
                 <div className="relative">
@@ -264,17 +264,17 @@ export function LoginForm({ members, messName, messLogoUrl }: LoginFormProps) {
                     value={selectedMemberId}
                     onChange={(e) => setSelectedMemberId(e.target.value)}
                     required
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-hidden transition-all cursor-pointer"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500 outline-hidden transition-all cursor-pointer"
                   >
-                    <option value="">-- Choose your name --</option>
+                    <option value="" className="dark:bg-slate-900 dark:text-slate-100">-- Choose your name --</option>
                     {members.map((m) => (
-                      <option key={m.id} value={m.id}>
+                      <option key={m.id} value={m.id} className="dark:bg-slate-900 dark:text-slate-100">
                         {m.fullName} {m.roomNumber ? `(${m.roomNumber})` : ''} {m.isManager ? '♚ Manager' : ''}
                       </option>
                     ))}
                   </select>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-1">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                   All 14 preloaded bachelor mess members have individual access.
                 </p>
               </div>
@@ -282,11 +282,11 @@ export function LoginForm({ members, messName, messLogoUrl }: LoginFormProps) {
               {/* Password Input */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-bold text-slate-700">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                     Password *
                   </label>
                   <span className="text-[11px] text-slate-400">
-                    Default: <code className="bg-slate-100 text-emerald-700 px-1 py-0.5 rounded font-mono font-bold">mess1234</code>
+                    Default: <code className="bg-slate-100 dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 px-1 py-0.5 rounded font-mono font-bold">mess1234</code>
                   </span>
                 </div>
                 <div className="relative">
@@ -296,18 +296,18 @@ export function LoginForm({ members, messName, messLogoUrl }: LoginFormProps) {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your assigned password"
                     required
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono text-slate-900 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-hidden pr-10 transition-all"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-mono text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-emerald-500 outline-hidden pr-10 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-1">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                   Passwords are created and assigned by the Admin.
                 </p>
               </div>

@@ -77,27 +77,27 @@ export function MemberLedgerClient({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            <BookOpenText className="w-6 h-6 text-emerald-600" />
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <BookOpenText className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             Financial Statement &amp; Ledger
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             Chronological audit of deposits, bazar credits, meal deductions, and running balance for <strong>{selectedMemberName}</strong>
           </p>
         </div>
 
         <div className="flex items-center gap-2 no-print">
           {isManager && members.length > 1 && (
-            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 shadow-2xs">
-              <User className="w-4 h-4 text-slate-500" />
+            <div className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 shadow-2xs">
+              <User className="w-4 h-4 text-slate-500 dark:text-slate-400" />
               <select
                 value={selectedMemberId}
                 onChange={(e) => handleMemberChange(e.target.value)}
                 aria-label="Select Member"
-                className="text-xs font-semibold text-slate-800 bg-transparent outline-hidden cursor-pointer"
+                className="text-xs font-semibold text-slate-800 dark:text-slate-200 bg-transparent outline-hidden cursor-pointer"
               >
                 {members.map((m) => (
-                  <option key={m.id} value={m.id}>
+                  <option key={m.id} value={m.id} className="dark:bg-slate-900 dark:text-slate-100">
                     {m.fullName}
                   </option>
                 ))}
@@ -106,7 +106,7 @@ export function MemberLedgerClient({
           )}
 
           <Button variant="outline" size="sm" onClick={handleExportExcel} className="flex items-center gap-1.5">
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             Excel
           </Button>
           <Button variant="outline" size="sm" onClick={() => window.print()} className="flex items-center gap-1.5">
@@ -152,14 +152,14 @@ export function MemberLedgerClient({
       {/* Ledger Table */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-slate-900">
+          <CardTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
             Chronological Transaction Ledger
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
+            <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+              <thead className="bg-slate-50 dark:bg-slate-800/70 text-xs uppercase text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                 <tr>
                   <th className="py-3 px-4">Date</th>
                   <th className="py-3 px-4">Transaction Type</th>
@@ -169,27 +169,27 @@ export function MemberLedgerClient({
                   <th className="py-3 px-4 text-right">Running Balance</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {ledgerRows.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 text-xs font-medium text-slate-700 whitespace-nowrap">
+                  <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                    <td className="py-3 px-4 text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       {row.date}
                     </td>
                     <td className="py-3 px-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                         {row.type}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-slate-800 font-medium">
+                    <td className="py-3 px-4 text-slate-800 dark:text-slate-200 font-medium">
                       {row.description}
                     </td>
-                    <td className="py-3 px-4 text-right font-semibold text-rose-600">
+                    <td className="py-3 px-4 text-right font-semibold text-rose-600 dark:text-rose-400">
                       {row.debit > 0 ? `-${formatCurrency(row.debit)}` : '—'}
                     </td>
-                    <td className="py-3 px-4 text-right font-semibold text-emerald-600">
+                    <td className="py-3 px-4 text-right font-semibold text-emerald-600 dark:text-emerald-400">
                       {row.credit > 0 ? `+${formatCurrency(row.credit)}` : '—'}
                     </td>
-                    <td className="py-3 px-4 text-right font-bold text-slate-900">
+                    <td className="py-3 px-4 text-right font-bold text-slate-900 dark:text-slate-100">
                       {formatCurrency(Math.abs(row.balance))}
                       <span className="text-[10px] font-medium ml-1 text-slate-400">
                         {row.balance >= 0 ? '(Adv)' : '(Due)'}

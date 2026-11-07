@@ -30,6 +30,7 @@ import {
 import { useI18n } from '@/lib/i18n/context';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { updateMemberProfileAction, submitIndividualMealAction } from '@/app/actions/profile';
+import { updateMemberMealEntryAction } from '@/app/actions/meals';
 import { changeAdminPasswordAction } from '@/app/actions/auth';
 
 interface MemberData {
@@ -174,6 +175,54 @@ export function MemberProfileClient({
   const [entryBf, setEntryBf] = useState(0);
   const [entryLn, setEntryLn] = useState(1);
   const [entryDn, setEntryDn] = useState(1);
+
+  // Edit Specific Meal Record Modal State
+  const [editingMeal, setEditingMeal] = useState<MealRecord | null>(null);
+  const [editMealBf, setEditMealBf] = useState(0);
+  const [editMealLn, setEditMealLn] = useState(0);
+  const [editMealDn, setEditMealDn] = useState(0);
+  const [editMealMsg, setEditMealMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleSaveEditedMeal = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMeal) return;
+    setEditMealMsg(null);
+
+    const dateStr = new Date(editingMeal.date).toISOString().split('T')[0];
+
+    startTransition(async () => {
+      const res = await updateMemberMealEntryAction({
+        memberId: member.id,
+        date: dateStr,
+        breakfast: Number(editMealBf) || 0,
+        lunch: Number(editMealLn) || 0,
+        dinner: Number(editMealDn) || 0,
+      });
+
+      if (res.success && res.entry) {
+        setEditMealMsg({ type: 'success', text: 'মিল এন্ট্রি সফলভাবে আপডেট করা হয়েছে (Meal updated successfully)!' });
+        setMeals((prev) =>
+          prev.map((m) =>
+            m.id === editingMeal.id
+              ? {
+                  ...m,
+                  breakfast: res.entry!.breakfast,
+                  lunch: res.entry!.lunch,
+                  dinner: res.entry!.dinner,
+                  totalMeals: res.entry!.totalMeals,
+                }
+              : m
+          )
+        );
+        setTimeout(() => {
+          setEditingMeal(null);
+          setEditMealMsg(null);
+        }, 1200);
+      } else {
+        setEditMealMsg({ type: 'error', text: res.error || 'Failed to update meal entry.' });
+      }
+    });
+  };
 
   const [isPending, startTransition] = useTransition();
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -590,12 +639,13 @@ export function MemberProfileClient({
                     <th className="py-2.5 px-3 text-center">Lunch</th>
                     <th className="py-2.5 px-3 text-center">Dinner</th>
                     <th className="py-2.5 px-3 text-right">Total Meals</th>
+                    {(isOwnProfile || canEdit) && <th className="py-2.5 px-3 text-right">Action</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {meals.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-6 text-center text-slate-400">
+                      <td colSpan={isOwnProfile || canEdit ? 6 : 5} className="py-6 text-center text-slate-400">
                         No meal records found for this month.
                       </td>
                     </tr>
@@ -611,6 +661,23 @@ export function MemberProfileClient({
                         <td className="py-2.5 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
                           {m.totalMeals}
                         </td>
+                        {(isOwnProfile || canEdit) && (
+                          <td className="py-2.5 px-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingMeal(m);
+                                setEditMealBf(m.breakfast);
+                                setEditMealLn(m.lunch);
+                                setEditMealDn(m.dinner);
+                                setEditMealMsg(null);
+                              }}
+                              className="px-2.5 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 rounded-lg border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer"
+                            >
+                              Edit
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))
                   )}
@@ -922,6 +989,125 @@ export function MemberProfileClient({
                   className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {isPending ? 'Updating...' : 'Save New Password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Edit Individual Meal Entry Modal */}
+      {editingMeal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
+                  <Utensils className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    মিল এন্ট্রি পরিবর্তন (Edit Meal Entry)
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    {formatDate(editingMeal.date)}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingMeal(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditedMeal} className="p-5 space-y-4">
+              {editMealMsg && (
+                <div
+                  className={`p-3 rounded-xl text-xs font-medium flex items-start gap-2 ${
+                    editMealMsg.type === 'success'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                      : 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+                  }`}
+                >
+                  {editMealMsg.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+                  )}
+                  <span>{editMealMsg.text}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Breakfast
+                  </label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    min="0"
+                    max="10"
+                    value={editMealBf}
+                    onChange={(e) => setEditMealBf(parseFloat(e.target.value) || 0)}
+                    className="w-full text-center px-2 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-slate-100 focus:outline-emerald-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Lunch
+                  </label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    min="0"
+                    max="10"
+                    value={editMealLn}
+                    onChange={(e) => setEditMealLn(parseFloat(e.target.value) || 0)}
+                    className="w-full text-center px-2 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-slate-100 focus:outline-emerald-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Dinner
+                  </label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    min="0"
+                    max="10"
+                    value={editMealDn}
+                    onChange={(e) => setEditMealDn(parseFloat(e.target.value) || 0)}
+                    className="w-full text-center px-2 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-slate-100 focus:outline-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                <span className="text-slate-500 dark:text-slate-400">Total Meals:</span>
+                <span className="font-extrabold text-base text-emerald-600 dark:text-emerald-400">
+                  {(Number(editMealBf) || 0) + (Number(editMealLn) || 0) + (Number(editMealDn) || 0)}
+                </span>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setEditingMeal(null)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isPending ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>

@@ -654,9 +654,9 @@ export function InteractiveDashboardCards({
                   </div>
 
                   {/* Members Today Meals Table */}
-                  <div className="border border-slate-200 rounded-xl overflow-hidden">
-                    <table className="w-full text-left text-sm text-slate-600">
-                      <thead className="bg-slate-100 text-xs uppercase font-semibold text-slate-700 border-b border-slate-200">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                      <thead className="bg-slate-100 dark:bg-slate-800 text-xs uppercase font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
                         <tr>
                           <th className="px-4 py-3">Member</th>
                           <th className="px-4 py-3">Room</th>
@@ -666,10 +666,10 @@ export function InteractiveDashboardCards({
                           <th className="px-4 py-3 text-right">Today&apos;s Total</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-200 text-xs">
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-xs">
                         {editingTodayMeals.map((m, idx) => (
-                          <tr key={m.memberId} className="hover:bg-slate-50">
-                            <td className="px-4 py-3 font-semibold text-slate-900">{m.fullName}</td>
+                          <tr key={m.memberId} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                            <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">{m.fullName}</td>
                             <td className="px-4 py-3 font-mono text-slate-500">{m.roomNumber || '—'}</td>
 
                             {isEditingMeals ? (
@@ -691,7 +691,7 @@ export function InteractiveDashboardCards({
                                       };
                                       setEditingTodayMeals(next);
                                     }}
-                                    className="w-16 px-2 py-1 text-center border border-slate-300 rounded font-bold text-slate-900"
+                                    className="w-16 px-2 py-1 text-center border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded font-bold text-slate-900 dark:text-slate-100"
                                   />
                                 </td>
                                 <td className="px-4 py-2 text-center">
@@ -711,7 +711,7 @@ export function InteractiveDashboardCards({
                                       };
                                       setEditingTodayMeals(next);
                                     }}
-                                    className="w-16 px-2 py-1 text-center border border-slate-300 rounded font-bold text-slate-900"
+                                    className="w-16 px-2 py-1 text-center border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded font-bold text-slate-900 dark:text-slate-100"
                                   />
                                 </td>
                                 <td className="px-4 py-2 text-center">
@@ -731,7 +731,7 @@ export function InteractiveDashboardCards({
                                       };
                                       setEditingTodayMeals(next);
                                     }}
-                                    className="w-16 px-2 py-1 text-center border border-slate-300 rounded font-bold text-slate-900"
+                                    className="w-16 px-2 py-1 text-center border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded font-bold text-slate-900 dark:text-slate-100"
                                   />
                                 </td>
                               </>
@@ -743,7 +743,7 @@ export function InteractiveDashboardCards({
                               </>
                             )}
 
-                            <td className="px-4 py-3 text-right font-bold text-slate-900 font-mono text-sm">
+                            <td className="px-4 py-3 text-right font-bold text-slate-900 dark:text-slate-100 font-mono text-sm">
                               {m.total}
                             </td>
                           </tr>
@@ -765,7 +765,7 @@ export function InteractiveDashboardCards({
                         placeholder="Search active members..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg outline-hidden focus:ring-2 focus:ring-emerald-500"
+                        className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg outline-hidden focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
                     <span className="text-xs text-slate-500 font-medium">
@@ -773,9 +773,9 @@ export function InteractiveDashboardCards({
                     </span>
                   </div>
 
-                  <div className="border border-slate-200 rounded-xl overflow-hidden">
-                    <table className="w-full text-left text-sm text-slate-600">
-                      <thead className="bg-slate-100 text-xs uppercase font-semibold text-slate-700 border-b border-slate-200">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                      <thead className="bg-slate-100 dark:bg-slate-800 text-xs uppercase font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
                         <tr>
                           <th className="px-4 py-3">Member Name</th>
                           <th className="px-4 py-3">Room</th>
@@ -786,16 +786,16 @@ export function InteractiveDashboardCards({
                           <th className="px-4 py-3 text-right">Action</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-200 text-xs">
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-xs">
                         {activeMembersList
                           .filter((m) => m.fullName.toLowerCase().includes(searchQuery.toLowerCase()))
                           .map((m) => (
-                            <tr key={m.id} className="hover:bg-slate-50">
-                              <td className="px-4 py-3 font-semibold text-slate-900">{m.fullName}</td>
+                            <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                              <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">{m.fullName}</td>
                               <td className="px-4 py-3 font-mono">{m.roomNumber || '—'}</td>
                               <td className="px-4 py-3 font-mono">{m.phone}</td>
                               <td className="px-4 py-3">{formatDate(m.joiningDate)}</td>
-                              <td className="px-4 py-3 text-center font-bold text-slate-900">{m.totalMeals}</td>
+                              <td className="px-4 py-3 text-center font-bold text-slate-900 dark:text-slate-100">{m.totalMeals}</td>
                               <td className="px-4 py-3 text-right font-mono font-bold">
                                 <span className={m.balance >= 0 ? 'text-emerald-700' : 'text-rose-700'}>
                                   ৳{m.balance.toFixed(2)}
@@ -829,9 +829,9 @@ export function InteractiveDashboardCards({
                       No deactivated members currently. All mess roommates are active.
                     </div>
                   ) : (
-                    <div className="border border-slate-200 rounded-xl overflow-hidden">
-                      <table className="w-full text-left text-sm text-slate-600">
-                        <thead className="bg-slate-100 text-xs uppercase font-semibold text-slate-700 border-b border-slate-200">
+                    <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                      <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                        <thead className="bg-slate-100 dark:bg-slate-800 text-xs uppercase font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
                           <tr>
                             <th className="px-4 py-3">Member Name</th>
                             <th className="px-4 py-3">Phone</th>
@@ -840,10 +840,10 @@ export function InteractiveDashboardCards({
                             <th className="px-4 py-3 text-right">Action</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-200 text-xs">
+                        <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-xs">
                           {deactivatedMembersList.map((m) => (
-                            <tr key={m.id} className="hover:bg-slate-50">
-                              <td className="px-4 py-3 font-semibold text-slate-900">{m.fullName}</td>
+                            <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                              <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">{m.fullName}</td>
                               <td className="px-4 py-3 font-mono">{m.phone}</td>
                               <td className="px-4 py-3 text-center font-bold">{m.totalMeals}</td>
                               <td className="px-4 py-3 text-right font-mono font-bold">
@@ -887,9 +887,9 @@ export function InteractiveDashboardCards({
                     </div>
                   </div>
 
-                  <div className="border border-slate-200 rounded-xl overflow-hidden">
-                    <table className="w-full text-left text-sm text-slate-600">
-                      <thead className="bg-slate-100 text-xs uppercase font-semibold text-slate-700 border-b border-slate-200">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                      <thead className="bg-slate-100 dark:bg-slate-800 text-xs uppercase font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
                         <tr>
                           <th className="px-4 py-3">Member</th>
                           <th className="px-4 py-3 text-center">Meals Count</th>
@@ -897,15 +897,15 @@ export function InteractiveDashboardCards({
                           <th className="px-4 py-3 text-right">Meal Cost (৳)</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-200 text-xs">
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-xs">
                         {memberBalances.map((mb) => {
                           const sharePct = metrics.monthTotalMeals > 0
                             ? ((mb.meals / metrics.monthTotalMeals) * 100).toFixed(1)
                             : '0';
                           return (
-                            <tr key={mb.memberId} className="hover:bg-slate-50">
-                              <td className="px-4 py-3 font-semibold text-slate-900">{mb.fullName}</td>
-                              <td className="px-4 py-3 text-center font-bold text-slate-900">{mb.meals}</td>
+                            <tr key={mb.memberId} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                              <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">{mb.fullName}</td>
+                              <td className="px-4 py-3 text-center font-bold text-slate-900 dark:text-slate-100">{mb.meals}</td>
                               <td className="px-4 py-3 text-center font-mono">{sharePct}%</td>
                               <td className="px-4 py-3 text-right font-mono font-bold">
                                 ৳{mb.mealCost.toFixed(2)}
@@ -947,8 +947,8 @@ export function InteractiveDashboardCards({
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 leading-relaxed space-y-2">
-                    <p className="font-semibold text-slate-900 flex items-center gap-1.5">
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 leading-relaxed space-y-2">
+                    <p className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                       <Info className="w-4 h-4 text-emerald-600" />
                       Financial Integrity Guarantee:
                     </p>
@@ -970,7 +970,7 @@ export function InteractiveDashboardCards({
                         placeholder="Search bazar items or categories..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg outline-hidden focus:ring-2 focus:ring-emerald-500"
+                        className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg outline-hidden focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
                     <span className="text-xs text-slate-500 font-medium">
@@ -978,9 +978,9 @@ export function InteractiveDashboardCards({
                     </span>
                   </div>
 
-                  <div className="border border-slate-200 rounded-xl overflow-hidden">
-                    <table className="w-full text-left text-sm text-slate-600">
-                      <thead className="bg-slate-100 text-xs uppercase font-semibold text-slate-700 border-b border-slate-200">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                      <thead className="bg-slate-100 dark:bg-slate-800 text-xs uppercase font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
                         <tr>
                           <th className="px-4 py-3">Date</th>
                           <th className="px-4 py-3">Item / Description</th>
@@ -989,7 +989,7 @@ export function InteractiveDashboardCards({
                           <th className="px-4 py-3 text-right">Amount</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-200 text-xs">
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-xs">
                         {bazarExpenses
                           .filter(
                             (b) =>
@@ -997,9 +997,9 @@ export function InteractiveDashboardCards({
                               b.category.toLowerCase().includes(searchQuery.toLowerCase())
                           )
                           .map((b) => (
-                            <tr key={b.id} className="hover:bg-slate-50">
+                            <tr key={b.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                               <td className="px-4 py-3 font-mono">{formatDate(b.date)}</td>
-                              <td className="px-4 py-3 font-semibold text-slate-900">{b.title}</td>
+                              <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">{b.title}</td>
                               <td className="px-4 py-3">
                                 <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-700">
                                   {b.category}
@@ -1014,7 +1014,7 @@ export function InteractiveDashboardCards({
                                   <span className="text-emerald-700 font-medium">Mess Common Fund</span>
                                 )}
                               </td>
-                              <td className="px-4 py-3 text-right font-mono font-bold text-slate-900">
+                              <td className="px-4 py-3 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
                                 ৳{b.amount.toFixed(2)}
                               </td>
                             </tr>
@@ -1036,7 +1036,7 @@ export function InteractiveDashboardCards({
                         placeholder="Search deposits by member..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg outline-hidden focus:ring-2 focus:ring-emerald-500"
+                        className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg outline-hidden focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
                     <span className="text-xs text-slate-500 font-medium">
@@ -1044,9 +1044,9 @@ export function InteractiveDashboardCards({
                     </span>
                   </div>
 
-                  <div className="border border-slate-200 rounded-xl overflow-hidden">
-                    <table className="w-full text-left text-sm text-slate-600">
-                      <thead className="bg-slate-100 text-xs uppercase font-semibold text-slate-700 border-b border-slate-200">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                      <thead className="bg-slate-100 dark:bg-slate-800 text-xs uppercase font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
                         <tr>
                           <th className="px-4 py-3">Deposit Date</th>
                           <th className="px-4 py-3">Member</th>
@@ -1055,13 +1055,13 @@ export function InteractiveDashboardCards({
                           <th className="px-4 py-3 text-right">Amount</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-200 text-xs">
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-xs">
                         {deposits
                           .filter((d) => d.memberName.toLowerCase().includes(searchQuery.toLowerCase()))
                           .map((d) => (
-                            <tr key={d.id} className="hover:bg-slate-50">
+                            <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                               <td className="px-4 py-3 font-mono">{formatDate(d.depositDate)}</td>
-                              <td className="px-4 py-3 font-semibold text-slate-900">{d.memberName}</td>
+                              <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">{d.memberName}</td>
                               <td className="px-4 py-3 font-medium text-slate-700">{d.paymentMethod}</td>
                               <td className="px-4 py-3 font-mono text-slate-500">{d.transactionId || '—'}</td>
                               <td className="px-4 py-3 text-right font-mono font-bold text-emerald-700">
@@ -1089,9 +1089,9 @@ export function InteractiveDashboardCards({
                     </div>
                   </div>
 
-                  <div className="border border-slate-200 rounded-xl overflow-hidden">
-                    <table className="w-full text-left text-sm text-slate-600">
-                      <thead className="bg-slate-100 text-xs uppercase font-semibold text-slate-700 border-b border-slate-200">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                      <thead className="bg-slate-100 dark:bg-slate-800 text-xs uppercase font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
                         <tr>
                           <th className="px-4 py-3">Date</th>
                           <th className="px-4 py-3">Expense Title</th>
@@ -1100,11 +1100,11 @@ export function InteractiveDashboardCards({
                           <th className="px-4 py-3 text-right">Amount</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-200 text-xs">
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-xs">
                         {additionalExpenses.map((e) => (
-                          <tr key={e.id} className="hover:bg-slate-50">
+                          <tr key={e.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                             <td className="px-4 py-3 font-mono">{formatDate(e.date)}</td>
-                            <td className="px-4 py-3 font-semibold text-slate-900">{e.title}</td>
+                            <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">{e.title}</td>
                             <td className="px-4 py-3 text-slate-600">{e.category}</td>
                             <td className="px-4 py-3">
                               <span
@@ -1117,7 +1117,7 @@ export function InteractiveDashboardCards({
                                 {e.expenseType} {e.targetMemberName ? `(${e.targetMemberName})` : ''}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-right font-mono font-bold text-slate-900">
+                            <td className="px-4 py-3 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
                               ৳{e.amount.toFixed(2)}
                             </td>
                           </tr>
@@ -1150,9 +1150,9 @@ export function InteractiveDashboardCards({
                     </div>
                   </div>
 
-                  <div className="border border-slate-200 rounded-xl overflow-hidden">
-                    <table className="w-full text-left text-sm text-slate-600">
-                      <thead className="bg-slate-100 text-xs uppercase font-semibold text-slate-700 border-b border-slate-200">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                      <thead className="bg-slate-100 dark:bg-slate-800 text-xs uppercase font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
                         <tr>
                           <th className="px-4 py-3">Member</th>
                           <th className="px-4 py-3 text-center">Meals</th>
@@ -1162,12 +1162,12 @@ export function InteractiveDashboardCards({
                           <th className="px-4 py-3 text-right">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-200 text-xs">
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-xs">
                         {memberBalances
                           .filter((mb) => (activeDrilldown === 'dues' ? mb.dueAmount > 0 : mb.advanceAmount > 0))
                           .map((mb) => (
-                            <tr key={mb.memberId} className="hover:bg-slate-50">
-                              <td className="px-4 py-3 font-semibold text-slate-900">{mb.fullName}</td>
+                            <tr key={mb.memberId} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                              <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">{mb.fullName}</td>
                               <td className="px-4 py-3 text-center font-bold">{mb.meals}</td>
                               <td className="px-4 py-3 text-right font-mono">৳{mb.totalCost.toFixed(2)}</td>
                               <td className="px-4 py-3 text-right font-mono">৳{mb.deposits.toFixed(2)}</td>

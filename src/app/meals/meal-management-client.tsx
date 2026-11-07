@@ -145,23 +145,23 @@ export function MealManagementClient({
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Daily Meal Management
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Bulk meal entry for Breakfast, Lunch & Dinner with fractional 0.5 support
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            Bulk meal entry for Breakfast, Lunch &amp; Dinner with fractional 0.5 support
           </p>
         </div>
 
         {/* Date Selector & Action buttons */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2 bg-white border border-slate-300 rounded-lg px-3 py-1.5 shadow-2xs">
-            <Calendar className="w-4 h-4 text-emerald-600" />
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 shadow-2xs">
+            <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <input
               type="date"
               value={date}
               onChange={(e) => handleDateChange(e.target.value)}
-              className="text-xs font-semibold text-slate-800 bg-transparent outline-hidden cursor-pointer"
+              className="text-xs font-semibold text-slate-800 dark:text-slate-100 bg-transparent outline-hidden cursor-pointer"
             />
           </div>
 
@@ -192,24 +192,24 @@ export function MealManagementClient({
       </div>
 
       {isClosed && (
-        <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-lg flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+        <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs rounded-xl flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
           <span>This month is CLOSED and locked. Meal entries are view-only.</span>
         </div>
       )}
 
       {message && (
         <div
-          className={`p-3 rounded-lg text-xs flex items-center gap-2 ${
+          className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
             message.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-              : 'bg-red-50 text-red-800 border border-red-200'
+              ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+              : 'bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
           }`}
         >
           {message.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           ) : (
-            <AlertCircle className="w-4 h-4 text-red-600" />
+            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
           )}
           <span>{message.text}</span>
         </div>
@@ -217,23 +217,23 @@ export function MealManagementClient({
 
       {/* Preset Toolbar (Manager Only) */}
       {isManager && !isClosed && (
-        <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-          <span className="font-semibold text-slate-700">Quick Presets:</span>
+        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+          <span className="font-semibold text-slate-700 dark:text-slate-200">Quick Presets:</span>
           <button
             onClick={() => setPreset('all_full')}
-            className="px-2 py-1 rounded-md bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 cursor-pointer font-medium"
+            className="px-2 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer font-medium"
           >
             All Full (1, 1, 1)
           </button>
           <button
             onClick={() => setPreset('lunch_dinner')}
-            className="px-2 py-1 rounded-md bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 cursor-pointer font-medium"
+            className="px-2 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer font-medium"
           >
-            Lunch & Dinner (0, 1, 1)
+            Lunch &amp; Dinner (0, 1, 1)
           </button>
           <button
             onClick={() => setPreset('all_zero')}
-            className="px-2 py-1 rounded-md bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 cursor-pointer font-medium"
+            className="px-2 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer font-medium"
           >
             Clear All (0, 0, 0)
           </button>
@@ -242,21 +242,21 @@ export function MealManagementClient({
 
       {/* Daily Summary Pill Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3 bg-white border border-slate-200 rounded-xl shadow-2xs">
-          <p className="text-xs text-slate-500 font-medium">Breakfast Total</p>
-          <p className="text-xl font-bold text-slate-900 mt-1">{dailyBf}</p>
+        <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xs">
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Breakfast Total</p>
+          <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{dailyBf}</p>
         </div>
-        <div className="p-3 bg-white border border-slate-200 rounded-xl shadow-2xs">
-          <p className="text-xs text-slate-500 font-medium">Lunch Total</p>
-          <p className="text-xl font-bold text-slate-900 mt-1">{dailyLn}</p>
+        <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xs">
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Lunch Total</p>
+          <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{dailyLn}</p>
         </div>
-        <div className="p-3 bg-white border border-slate-200 rounded-xl shadow-2xs">
-          <p className="text-xs text-slate-500 font-medium">Dinner Total</p>
-          <p className="text-xl font-bold text-slate-900 mt-1">{dailyDn}</p>
+        <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xs">
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Dinner Total</p>
+          <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{dailyDn}</p>
         </div>
-        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl shadow-2xs">
-          <p className="text-xs text-emerald-700 font-semibold">Today’s Grand Total</p>
-          <p className="text-xl font-bold text-emerald-800 mt-1">{dailyTotal} Meals</p>
+        <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl shadow-2xs">
+          <p className="text-xs text-emerald-700 dark:text-emerald-300 font-semibold">Today’s Grand Total</p>
+          <p className="text-xl font-bold text-emerald-800 dark:text-emerald-200 mt-1">{dailyTotal} Meals</p>
         </div>
       </div>
 
@@ -264,8 +264,8 @@ export function MealManagementClient({
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
+            <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+              <thead className="bg-slate-50 dark:bg-slate-800/70 text-xs uppercase text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                 <tr>
                   <th className="py-3 px-4">Member Name</th>
                   <th className="py-3 px-4">Room</th>
@@ -276,17 +276,17 @@ export function MealManagementClient({
                   <th className="py-3 px-4 text-right">Month Total</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {initialMeals.map((m) => {
                   const current = mealsState[m.memberId] || { b: 0, l: 0, d: 0 };
                   const rowTotal = current.b + current.l + current.d;
 
                   return (
-                    <tr key={m.memberId} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-4 font-semibold text-slate-900">
+                    <tr key={m.memberId} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100">
                         {m.fullName}
                       </td>
-                      <td className="py-3 px-4 text-xs text-slate-500">
+                      <td className="py-3 px-4 text-xs text-slate-500 dark:text-slate-400">
                         {m.roomNumber || '—'}
                       </td>
 
@@ -297,17 +297,17 @@ export function MealManagementClient({
                           value={current.b}
                           onChange={(e) => handleMealChange(m.memberId, 'b', parseFloat(e.target.value))}
                           aria-label={`Breakfast for ${m.fullName}`}
-                          className={`w-16 py-1 px-2 text-center rounded-md border text-xs font-semibold focus:outline-hidden focus:ring-1 focus:ring-emerald-500 ${
+                          className={`w-16 py-1 px-2 text-center rounded-md border text-xs font-semibold focus:outline-hidden focus:ring-1 focus:ring-emerald-500 cursor-pointer ${
                             current.b > 0
-                              ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-                              : 'bg-slate-50 border-slate-200 text-slate-500'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300'
+                              : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
                           }`}
                         >
-                          <option value="0">0</option>
-                          <option value="0.5">0.5</option>
-                          <option value="1">1</option>
-                          <option value="1.5">1.5</option>
-                          <option value="2">2</option>
+                          <option value="0" className="dark:bg-slate-900 dark:text-slate-100">0</option>
+                          <option value="0.5" className="dark:bg-slate-900 dark:text-slate-100">0.5</option>
+                          <option value="1" className="dark:bg-slate-900 dark:text-slate-100">1</option>
+                          <option value="1.5" className="dark:bg-slate-900 dark:text-slate-100">1.5</option>
+                          <option value="2" className="dark:bg-slate-900 dark:text-slate-100">2</option>
                         </select>
                       </td>
 
@@ -318,17 +318,17 @@ export function MealManagementClient({
                           value={current.l}
                           onChange={(e) => handleMealChange(m.memberId, 'l', parseFloat(e.target.value))}
                           aria-label={`Lunch for ${m.fullName}`}
-                          className={`w-16 py-1 px-2 text-center rounded-md border text-xs font-semibold focus:outline-hidden focus:ring-1 focus:ring-emerald-500 ${
+                          className={`w-16 py-1 px-2 text-center rounded-md border text-xs font-semibold focus:outline-hidden focus:ring-1 focus:ring-emerald-500 cursor-pointer ${
                             current.l > 0
-                              ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-                              : 'bg-slate-50 border-slate-200 text-slate-500'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300'
+                              : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
                           }`}
                         >
-                          <option value="0">0</option>
-                          <option value="0.5">0.5</option>
-                          <option value="1">1</option>
-                          <option value="1.5">1.5</option>
-                          <option value="2">2</option>
+                          <option value="0" className="dark:bg-slate-900 dark:text-slate-100">0</option>
+                          <option value="0.5" className="dark:bg-slate-900 dark:text-slate-100">0.5</option>
+                          <option value="1" className="dark:bg-slate-900 dark:text-slate-100">1</option>
+                          <option value="1.5" className="dark:bg-slate-900 dark:text-slate-100">1.5</option>
+                          <option value="2" className="dark:bg-slate-900 dark:text-slate-100">2</option>
                         </select>
                       </td>
 
@@ -339,25 +339,25 @@ export function MealManagementClient({
                           value={current.d}
                           onChange={(e) => handleMealChange(m.memberId, 'd', parseFloat(e.target.value))}
                           aria-label={`Dinner for ${m.fullName}`}
-                          className={`w-16 py-1 px-2 text-center rounded-md border text-xs font-semibold focus:outline-hidden focus:ring-1 focus:ring-emerald-500 ${
+                          className={`w-16 py-1 px-2 text-center rounded-md border text-xs font-semibold focus:outline-hidden focus:ring-1 focus:ring-emerald-500 cursor-pointer ${
                             current.d > 0
-                              ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-                              : 'bg-slate-50 border-slate-200 text-slate-500'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300'
+                              : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
                           }`}
                         >
-                          <option value="0">0</option>
-                          <option value="0.5">0.5</option>
-                          <option value="1">1</option>
-                          <option value="1.5">1.5</option>
-                          <option value="2">2</option>
+                          <option value="0" className="dark:bg-slate-900 dark:text-slate-100">0</option>
+                          <option value="0.5" className="dark:bg-slate-900 dark:text-slate-100">0.5</option>
+                          <option value="1" className="dark:bg-slate-900 dark:text-slate-100">1</option>
+                          <option value="1.5" className="dark:bg-slate-900 dark:text-slate-100">1.5</option>
+                          <option value="2" className="dark:bg-slate-900 dark:text-slate-100">2</option>
                         </select>
                       </td>
 
-                      <td className="py-3 px-4 text-center font-bold text-slate-900">
+                      <td className="py-3 px-4 text-center font-bold text-slate-900 dark:text-slate-100">
                         {rowTotal}
                       </td>
 
-                      <td className="py-3 px-4 text-right font-medium text-slate-600">
+                      <td className="py-3 px-4 text-right font-medium text-slate-600 dark:text-slate-400">
                         {m.monthTotal}
                       </td>
                     </tr>
