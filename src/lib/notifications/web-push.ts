@@ -1,20 +1,23 @@
 import { setVapidDetails, sendNotification } from 'web-push';
-import fs from 'fs';
-import path from 'path';
+import { prisma } from '@/lib/prisma';
 
 const VAPID_PUBLIC_KEY =
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
   'BEE0JvErukoGZE58aFI9xq4vzlnyTTdpucKABhyMsEVfLaOM8P_Zi_4UlrW6Zc65jWv66Ls8owmImnyyTAAYBgs';
 
-const VAPID_PRIVATE_KEY =
-  process.env.VAPID_PRIVATE_KEY || 'LyuK8Uic2JZ4k3oR-OcTMsnZ9X7zz5GH-xMS8SbZjpA';
-
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:support@messmate.app';
 
-try {
-  setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
-} catch (e) {
-  console.error('Failed to configure webpush VAPID details:', e);
+let isVapidConfigured = false;
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+  try {
+    setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+    isVapidConfigured = true;
+  } catch (e) {
+    console.error('Failed to configure webpush VAPID details:', e);
+  }
+} else {
+  console.warn('VAPID_PRIVATE_KEY or NEXT_PUBLIC_VAPID_PUBLIC_KEY is missing. Web push dispatch will be disabled.');
 }
 
 export interface StoredSubscription {
@@ -26,42 +29,11 @@ export interface StoredSubscription {
     p256dh: string;
     auth: string;
   };
-  createdAt: string;
-}
-
-const DATA_DIR = path.join(process.cwd(), 'data');
-const SUBS_FILE = path.join(DATA_DIR, 'push-subscriptions.json');
-
-function ensureDataFile(): StoredSubscription[] {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    if (!fs.existsSync(SUBS_FILE)) {
-      fs.writeFileSync(SUBS_FILE, JSON.stringify([]), 'utf-8');
-      return [];
-    }
-    const content = fs.readFileSync(SUBS_FILE, 'utf-8');
-    return JSON.parse(content || '[]');
-  } catch (err) {
-    console.error('Error reading push subscriptions file:', err);
-    return [];
-  }
-}
-
-function writeDataFile(subs: StoredSubscription[]) {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    fs.writeFileSync(SUBS_FILE, JSON.stringify(subs, null, 2), 'utf-8');
-  } catch (err) {
-    console.error('Error writing push subscriptions file:', err);
-  }
+  createdAt?: string | Date;
 }
 
 /**
- * Saves or updates a member's phone push subscription
+ * Saves or updates a member's phone push subscription in PostgreSQL
  */
 export async function savePushSubscription(data: {
   memberId: string;
@@ -71,23 +43,54 @@ export async function savePushSubscription(data: {
     p256dh: string;
     auth: string;
   };
+  userAgent?: string;
 }) {
-  const subs = ensureDataFile();
-  // Filter out any existing subscription with the same endpoint
-  const filtered = subs.filter((s) => s.endpoint !== data.endpoint);
+  try {
+    const sub = await prisma.pushSubscription.upsert({
+      where: { endpoint: data.endpoint },
+      create: {
+        messId: data.messId,
+        memberId: data.memberId,
+        endpoint: data.endpoint,
+        p256dh: data.keys.p256dh,
+        auth: data.keys.auth,
+        userAgent: data.userAgent || null,
+      },
+      update: {
+        messId: data.messId,
+        memberId: data.memberId,
+        p256dh: data.keys.p256dh,
+        auth: data.keys.auth,
+        userAgent: data.userAgent || null,
+      },
+    });
 
-  const newSub: StoredSubscription = {
-    id: `sub_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-    memberId: data.memberId,
-    messId: data.messId,
-    endpoint: data.endpoint,
-    keys: data.keys,
-    createdAt: new Date().toISOString(),
-  };
+    return {
+      id: sub.id,
+      memberId: sub.memberId,
+      messId: sub.messId,
+      endpoint: sub.endpoint,
+      keys: { p256dh: sub.p256dh, auth: sub.auth },
+    };
+  } catch (err) {
+    console.error('Failed to save push subscription in database:', err);
+    throw err;
+  }
+}
 
-  filtered.push(newSub);
-  writeDataFile(filtered);
-  return newSub;
+/**
+ * Unsubscribes / removes a device push subscription
+ */
+export async function removePushSubscription(endpoint: string) {
+  try {
+    await prisma.pushSubscription.deleteMany({
+      where: { endpoint },
+    });
+    return { success: true };
+  } catch (err) {
+    console.error('Failed to remove push subscription:', err);
+    return { success: false };
+  }
 }
 
 /**
@@ -103,12 +106,18 @@ export async function sendPushToMess(
   },
   excludeMemberId?: string
 ) {
-  const subs = ensureDataFile();
-  const messSubs = subs.filter(
-    (s) => s.messId === messId && (!excludeMemberId || s.memberId !== excludeMemberId)
-  );
+  if (!isVapidConfigured) {
+    return { sent: 0, failed: 0, reason: 'VAPID not configured' };
+  }
 
-  if (messSubs.length === 0) {
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: {
+      messId,
+      ...(excludeMemberId ? { memberId: { not: excludeMemberId } } : {}),
+    },
+  });
+
+  if (subscriptions.length === 0) {
     return { sent: 0, failed: 0 };
   }
 
@@ -125,12 +134,12 @@ export async function sendPushToMess(
   let failCount = 0;
 
   await Promise.all(
-    messSubs.map(async (sub) => {
+    subscriptions.map(async (sub) => {
       try {
         await sendNotification(
           {
             endpoint: sub.endpoint,
-            keys: sub.keys,
+            keys: { p256dh: sub.p256dh, auth: sub.auth },
           },
           payloadStr
         );
@@ -139,7 +148,6 @@ export async function sendPushToMess(
         failCount++;
         const statusCode = (err as { statusCode?: number })?.statusCode;
         if (statusCode === 404 || statusCode === 410) {
-          // Subscription has expired or unsubscribed
           deadEndpoints.push(sub.endpoint);
         }
       }
@@ -147,28 +155,41 @@ export async function sendPushToMess(
   );
 
   if (deadEndpoints.length > 0) {
-    const cleaned = subs.filter((s) => !deadEndpoints.includes(s.endpoint));
-    writeDataFile(cleaned);
+    try {
+      await prisma.pushSubscription.deleteMany({
+        where: { endpoint: { in: deadEndpoints } },
+      });
+    } catch (cleanupErr) {
+      console.error('Failed to cleanup dead endpoints:', cleanupErr);
+    }
   }
 
   return { sent: sentCount, failed: failCount };
 }
 
 /**
- * Sends a push notification directly to a specific member's phone
+ * Sends a push notification directly to specific members' phones (e.g. for Direct Messages or assigned tasks)
  */
-export async function sendPushToMember(
-  memberId: string,
+export async function sendPushToMembers(
+  memberIds: string[],
   payload: {
     title: string;
     body: string;
     url?: string;
+    tag?: string;
   }
 ) {
-  const subs = ensureDataFile();
-  const memberSubs = subs.filter((s) => s.memberId === memberId);
+  if (!isVapidConfigured || memberIds.length === 0) {
+    return { sent: 0, failed: 0 };
+  }
 
-  if (memberSubs.length === 0) {
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: {
+      memberId: { in: memberIds },
+    },
+  });
+
+  if (subscriptions.length === 0) {
     return { sent: 0, failed: 0 };
   }
 
@@ -176,26 +197,57 @@ export async function sendPushToMember(
     title: payload.title,
     body: payload.body,
     url: payload.url || '/dashboard',
+    tag: payload.tag || 'messmate-direct',
     icon: '/icons/icon-192.png',
   });
 
+  const deadEndpoints: string[] = [];
   let sentCount = 0;
+  let failCount = 0;
+
   await Promise.all(
-    memberSubs.map(async (sub) => {
+    subscriptions.map(async (sub) => {
       try {
         await sendNotification(
           {
             endpoint: sub.endpoint,
-            keys: sub.keys,
+            keys: { p256dh: sub.p256dh, auth: sub.auth },
           },
           payloadStr
         );
         sentCount++;
-      } catch (err) {
-        console.error('Failed to send push to member device:', err);
+      } catch (err: unknown) {
+        failCount++;
+        const statusCode = (err as { statusCode?: number })?.statusCode;
+        if (statusCode === 404 || statusCode === 410) {
+          deadEndpoints.push(sub.endpoint);
+        }
       }
     })
   );
 
-  return { sent: sentCount };
+  if (deadEndpoints.length > 0) {
+    try {
+      await prisma.pushSubscription.deleteMany({
+        where: { endpoint: { in: deadEndpoints } },
+      });
+    } catch {}
+  }
+
+  return { sent: sentCount, failed: failCount };
+}
+
+/**
+ * Sends a push notification directly to a single member's phone
+ */
+export async function sendPushToMember(
+  memberId: string,
+  payload: {
+    title: string;
+    body: string;
+    url?: string;
+    tag?: string;
+  }
+) {
+  return sendPushToMembers([memberId], payload);
 }

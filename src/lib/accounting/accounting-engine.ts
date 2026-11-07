@@ -33,6 +33,8 @@ export interface AdditionalExpenseData {
   expenseType: 'SHARED' | 'INDIVIDUAL' | string;
   allocationMethod?: 'EQUAL' | 'CUSTOM' | 'PROPORTIONAL' | string | null;
   targetMemberId?: string | null; // For INDIVIDUAL
+  paymentSource?: 'PERSONAL' | 'MESS_FUND' | string;
+  payerMemberId?: string | null;
   sharedAllocations?: Array<{
     memberId: string;
     amount: number | string | Decimal;
@@ -75,6 +77,7 @@ export interface MonthlyAccountingResult {
   totalAdditionalExpenses: Decimal;
   totalPersonalPayments: Decimal;
   totalMessFundPayments: Decimal;
+  availableMessFund: Decimal;
   totalNetAdvances: Decimal;
   totalNetDues: Decimal;
   membersSummary: Record<string, MemberAccountingSummary>;
@@ -191,6 +194,15 @@ export class MessAccountingEngine {
     for (const exp of additionalExpenses) {
       const amt = this.toDecimal(exp.amount);
 
+      // Track payment source for Mess Fund balance
+      if (exp.paymentSource === 'PERSONAL' && exp.payerMemberId) {
+        totalPersonalPayments = totalPersonalPayments.plus(amt);
+        const curr = memberPersonalPaymentsMap[exp.payerMemberId] || new Decimal(0);
+        memberPersonalPaymentsMap[exp.payerMemberId] = curr.plus(amt);
+      } else {
+        totalMessFundPayments = totalMessFundPayments.plus(amt);
+      }
+
       if (exp.expenseType === 'INDIVIDUAL') {
         totalIndividualExpenses = totalIndividualExpenses.plus(amt);
         if (exp.targetMemberId && memberIndividualCostMap[exp.targetMemberId]) {
@@ -250,11 +262,21 @@ export class MessAccountingEngine {
         } else {
           // Default: EQUAL distribution among all active members
           const activeMembers = members.filter((m) => m.isActive);
-          const count = activeMembers.length > 0 ? activeMembers.length : members.length;
+          const eligibleMembers = activeMembers.length > 0 ? activeMembers : members;
+          const count = eligibleMembers.length;
           if (count > 0) {
-            const perHead = this.roundCurrency(amt.dividedBy(count));
-            for (const m of activeMembers) {
-              memberSharedCostMap[m.memberId] = memberSharedCostMap[m.memberId].plus(perHead);
+            const totalCents = amt.times(100).round();
+            const baseCents = totalCents.dividedToIntegerBy(count);
+            let remainderCents = totalCents.minus(baseCents.times(count)).toNumber();
+
+            for (const m of eligibleMembers) {
+              let memberCents = baseCents;
+              if (remainderCents > 0) {
+                memberCents = memberCents.plus(1);
+                remainderCents--;
+              }
+              const memberShare = memberCents.dividedBy(100);
+              memberSharedCostMap[m.memberId] = memberSharedCostMap[m.memberId].plus(memberShare);
             }
           }
         }
@@ -331,6 +353,7 @@ export class MessAccountingEngine {
       totalAdditionalExpenses: this.roundCurrency(totalAdditionalExpenses),
       totalPersonalPayments: this.roundCurrency(totalPersonalPayments),
       totalMessFundPayments: this.roundCurrency(totalMessFundPayments),
+      availableMessFund: this.roundCurrency(totalDeposits.minus(totalMessFundPayments)),
       totalNetAdvances: this.roundCurrency(totalNetAdvances),
       totalNetDues: this.roundCurrency(totalNetDues),
       membersSummary,

@@ -400,6 +400,65 @@ runTest('Scenario 15: Decimal-safe precision without IEEE 754 floating point art
   assert(res.membersSummary['m3'].mealCost.equals(1333.33), 'Member 3 cost should be 1333.33');
 });
 
+// 16. Available mess fund balance verification from financial ledger
+runTest('Scenario 16: Available mess fund calculation equals deposits minus fund expenditures', () => {
+  const members: MemberMealData[] = [
+    { memberId: 'm1', fullName: 'A', breakfast: 5, lunch: 5, dinner: 5, totalMeals: 15, isActive: true, openingBalance: 0 },
+    { memberId: 'm2', fullName: 'B', breakfast: 5, lunch: 5, dinner: 5, totalMeals: 15, isActive: true, openingBalance: 0 },
+  ];
+  const deposits = [
+    { id: 'd1', memberId: 'm1', amount: 5000 },
+    { id: 'd2', memberId: 'm2', amount: 5000 },
+  ]; // Total deposits = 10,000
+  const bazar = [
+    { id: 'b1', amount: 4000, category: 'Rice', paymentSource: 'MESS_FUND' },
+    { id: 'b2', amount: 1500, category: 'Fish', paymentSource: 'PERSONAL', payerMemberId: 'm1' }, // Personal, does NOT reduce mess fund!
+  ];
+  const additional = [
+    { id: 'a1', title: 'Wifi', amount: 1000, category: 'Internet', expenseType: 'SHARED', paymentSource: 'MESS_FUND' },
+  ];
+
+  const res = MessAccountingEngine.calculateMonthlyAccounts({
+    members,
+    bazarExpenses: bazar,
+    additionalExpenses: additional,
+    deposits,
+  });
+
+  // Total deposits = 10,000
+  // Mess fund payments = 4,000 (bazar) + 1,000 (wifi) = 5,000
+  // Available mess fund = 10,000 - 5,000 = 5,000
+  assert(res.totalDeposits.equals(10000), 'Total deposits should be 10000');
+  assert(res.totalMessFundPayments.equals(5000), `Mess fund payments should be 5000, got ${res.totalMessFundPayments}`);
+  assert(res.availableMessFund.equals(5000), `Available mess fund should be 5000, got ${res.availableMessFund}`);
+});
+
+// 17. Penny-safe additional expense distribution preserves exact total without rounding loss
+runTest('Scenario 17: Penny-safe equal additional expense distribution sums to exact expense total', () => {
+  const members: MemberMealData[] = [
+    { memberId: 'm1', fullName: 'A', breakfast: 1, lunch: 1, dinner: 1, totalMeals: 3, isActive: true, openingBalance: 0 },
+    { memberId: 'm2', fullName: 'B', breakfast: 1, lunch: 1, dinner: 1, totalMeals: 3, isActive: true, openingBalance: 0 },
+    { memberId: 'm3', fullName: 'C', breakfast: 1, lunch: 1, dinner: 1, totalMeals: 3, isActive: true, openingBalance: 0 },
+  ];
+  // 100 / 3 = 33.333333333333336
+  const additional = [
+    { id: 'a1', title: 'Maid', amount: 100, category: 'Salary', expenseType: 'SHARED' },
+  ];
+
+  const res = MessAccountingEngine.calculateMonthlyAccounts({
+    members,
+    bazarExpenses: [],
+    additionalExpenses: additional,
+    deposits: [],
+  });
+
+  const sumAllocated = res.membersSummary['m1'].sharedExpenseCost
+    .plus(res.membersSummary['m2'].sharedExpenseCost)
+    .plus(res.membersSummary['m3'].sharedExpenseCost);
+
+  assert(sumAllocated.equals(100), `Total allocated (${sumAllocated}) must equal exactly 100`);
+});
+
 console.log('\n======================================================');
-console.log(' ALL 15 ACCOUNTING ENGINE TESTS PASSED SUCCESSFULLY! ');
+console.log(' ALL 17 ACCOUNTING ENGINE TESTS PASSED SUCCESSFULLY! ');
 console.log('======================================================\n');

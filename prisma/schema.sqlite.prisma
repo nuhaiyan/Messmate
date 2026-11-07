@@ -62,6 +62,8 @@ model Mess {
   adminPrivilegeLogs   AdminPrivilegeLog[]
   notices               Notice[]
   conversations         Conversation[]
+  pushSubscriptions     PushSubscription[]
+  notifications         Notification[]
 
   @@map("messes")
 }
@@ -105,6 +107,8 @@ model MessMember {
   adminLogs             AdminPrivilegeLog[]
   conversations         ConversationParticipant[]
   sentMessages          Message[]     @relation("SentMessages")
+  pushSubscriptions     PushSubscription[]
+  notifications         Notification[]
 
   @@unique([messId, userId])
   @@index([messId, isActive, isArchived])
@@ -489,4 +493,43 @@ model Message {
 
   @@index([conversationId, createdAt])
   @@map("messages")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  messId    String
+  memberId  String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  mess   Mess       @relation(fields: [messId], references: [id], onDelete: Cascade)
+  member MessMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([messId, memberId])
+  @@map("push_subscriptions")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  messId    String
+  memberId  String?
+  title     String
+  titleBn   String?
+  body      String
+  bodyBn    String?
+  type      String   @default("ANNOUNCEMENT")
+  url       String   @default("/dashboard")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  mess   Mess        @relation(fields: [messId], references: [id], onDelete: Cascade)
+  member MessMember? @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([messId, memberId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
 }

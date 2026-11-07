@@ -111,6 +111,8 @@ export async function getMonthAccountingData(messId: string, year: number, month
     expenseType: a.expenseType,
     allocationMethod: a.allocationMethod,
     targetMemberId: a.targetMemberId,
+    paymentSource: a.paymentSource,
+    payerMemberId: a.payerMemberId,
     sharedAllocations: a.sharedAllocations.map((sa) => ({
       memberId: sa.memberId,
       amount: Number(sa.amount),

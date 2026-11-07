@@ -38,6 +38,11 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const data = await getMonthAccountingData(session.messId, currentYear, currentMonth);
   const result = data.calculationResult;
 
+  // Snapshot meal rate if closed, otherwise active calculation meal rate
+  const monthlyMealRate = data.period.closing
+    ? Number(data.period.closing.mealRate.toString())
+    : Number(result.mealRate.toString());
+
   // 1. Meals Data
   const mealEntries = await prisma.mealEntry.findMany({
     where: { periodId: data.period.id },
@@ -58,6 +63,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const monthlyMealsSummary = result.memberList.map((m) => ({
     member: m.fullName,
     totalMeals: Number(m.totalMeals.toString()),
+    mealRate: monthlyMealRate,
     mealCost: Number(m.mealCost.toString()),
   }));
 
@@ -119,16 +125,20 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const closingStatement = {
     totalMeals: Number(result.totalMeals.toString()),
     totalBazar: Number(result.totalBazarExpense.toString()),
-    mealRate: Number(result.mealRate.toString()),
+    mealRate: monthlyMealRate,
     totalDeposits: Number(result.totalDeposits.toString()),
     totalOther: Number(result.totalAdditionalExpenses.toString()),
     members: result.memberList.map((m) => ({
       member: m.fullName,
       meals: Number(m.totalMeals.toString()),
+      mealRate: monthlyMealRate,
       mealCost: Number(m.mealCost.toString()),
       otherCost: Number(m.sharedExpenseCost.plus(m.individualExpenseCost).toString()),
+      totalCost: Number(m.totalCost.toString()),
       deposits: Number(m.deposits.toString()),
       balance: Number(m.closingBalance.toString()),
+      isAdvance: m.isAdvance,
+      isDue: m.isDue,
     })),
   };
 

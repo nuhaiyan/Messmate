@@ -35,11 +35,11 @@ export function DashboardCharts({
   memberMealsData,
   depositVsExpense,
 }: DashboardChartsProps) {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
 
   const expenseBreakdown = [
-    { name: 'Bazar Expenses', value: depositVsExpense.bazar, color: '#f97316' },
-    { name: 'Fixed / Utilities', value: depositVsExpense.additional, color: '#38bdf8' },
+    { name: language === 'bn' ? 'বাজার খরচ' : 'Bazar Expenses', value: depositVsExpense.bazar, color: '#f97316' },
+    { name: language === 'bn' ? 'ইউটিলিটি ও অন্যান্য' : 'Fixed / Utilities', value: depositVsExpense.additional, color: '#38bdf8' },
   ];
 
   return (
@@ -50,7 +50,7 @@ export function DashboardCharts({
           <CardTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center justify-between">
             <span>{t.dashboard.mealChartTitle}</span>
             <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-2.5 py-0.5 rounded-full border border-orange-200 dark:border-orange-800">
-              Daily Trend
+              {language === 'bn' ? 'দৈনিক ট্রেন্ড' : 'Daily Trend'}
             </span>
           </CardTitle>
         </CardHeader>
@@ -74,7 +74,7 @@ export function DashboardCharts({
                 <Area
                   type="monotone"
                   dataKey="meals"
-                  name="Total Meals"
+                  name={language === 'bn' ? 'মোট মিল' : 'Total Meals'}
                   stroke="#ea580c"
                   strokeWidth={2.5}
                   fillOpacity={1}
@@ -92,7 +92,7 @@ export function DashboardCharts({
           <CardTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center justify-between">
             <span>{t.dashboard.bazarChartTitle}</span>
             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
-              Meal Rate Basis
+              {language === 'bn' ? 'মিল রেটের ভিত্তি' : 'Meal Rate Basis'}
             </span>
           </CardTitle>
         </CardHeader>
@@ -106,7 +106,7 @@ export function DashboardCharts({
                 <Tooltip
                   formatter={(val: unknown) => {
                     const num = typeof val === 'number' ? val : Number(val) || 0;
-                    return [`৳${num.toLocaleString('en-BD')}`, 'Bazar Expense'];
+                    return [`৳${num.toLocaleString('en-BD')}`, language === 'bn' ? 'বাজার খরচ' : 'Bazar Expense'];
                   }}
                   contentStyle={{ backgroundColor: '#0f172a', borderRadius: '10px', border: '1px solid #334155', color: '#fff' }}
                 />
@@ -144,7 +144,7 @@ export function DashboardCharts({
                 <Tooltip
                   contentStyle={{ backgroundColor: '#0f172a', borderRadius: '10px', border: '1px solid #334155', color: '#fff' }}
                 />
-                <Bar dataKey="meals" name="Meals" fill="#fb923c" radius={[0, 6, 6, 0]} />
+                <Bar dataKey="meals" name={language === 'bn' ? 'মিল সংখ্যা' : 'Meals'} fill="#fb923c" radius={[0, 6, 6, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -188,7 +188,9 @@ export function DashboardCharts({
             </div>
             <div className="w-1/2 space-y-3.5 pl-4 border-l border-slate-100 dark:border-slate-800">
               <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Deposits</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  {language === 'bn' ? 'মোট জমা টাকা' : 'Total Deposits'}
+                </p>
                 <p className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
                   ৳{depositVsExpense.deposits.toLocaleString('en-BD')}
                 </p>
@@ -196,7 +198,9 @@ export function DashboardCharts({
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Bazar Expense</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    {language === 'bn' ? 'বাজার খরচ' : 'Bazar Expense'}
+                  </p>
                 </div>
                 <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
                   ৳{depositVsExpense.bazar.toLocaleString('en-BD')}
@@ -205,7 +209,9 @@ export function DashboardCharts({
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-sky-400" />
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Fixed & Utilities</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    {language === 'bn' ? 'ইউটিলিটি ও অন্যান্য' : 'Fixed & Utilities'}
+                  </p>
                 </div>
                 <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
                   ৳{depositVsExpense.additional.toLocaleString('en-BD')}

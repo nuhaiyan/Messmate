@@ -1,6 +1,6 @@
 'use client';
 
-import { saveSubscriptionAction } from '@/app/actions/notifications';
+import { saveSubscriptionAction, removeSubscriptionAction } from '@/app/actions/notifications';
 
 const VAPID_PUBLIC_KEY =
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
@@ -152,3 +152,29 @@ export async function showDirectPhoneNotification(title: string, body: string, u
     console.error('Failed to show phone notification:', err);
   }
 }
+
+/**
+ * Disables / unsubscribes current device from push notifications
+ */
+export async function unsubscribePhoneNotifications(): Promise<boolean> {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+    return false;
+  }
+
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    if (reg && 'pushManager' in reg) {
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        await removeSubscriptionAction(sub.endpoint);
+        await sub.unsubscribe();
+        return true;
+      }
+    }
+    return true;
+  } catch (err) {
+    console.error('Failed to unsubscribe push notifications:', err);
+    return false;
+  }
+}
+
