@@ -19,6 +19,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { addDepositAction, updateDepositAction, deleteDepositAction } from '@/app/actions/deposits';
+import { useI18n } from '@/lib/i18n/context';
 
 interface DepositItem {
   id: string;
@@ -47,6 +48,7 @@ export function DepositManagementClient({
   isManager: boolean;
   isClosed: boolean;
 }) {
+  const { language } = useI18n();
   const [modalOpen, setModalOpen] = useState(false);
   const [memberId, setMemberId] = useState(members[0]?.id || '');
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
@@ -70,8 +72,9 @@ export function DepositManagementClient({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || parseFloat(amount) <= 0) {
-      setError('Please enter a valid deposit amount.');
+    const parsedAmount = parseFloat(amount.trim());
+    if (amount.trim() === '' || isNaN(parsedAmount) || parsedAmount < 0) {
+      setError(language === 'bn' ? 'সঠিক জমার পরিমাণ দিন (০ বা তার বেশি)।' : 'Please enter a valid deposit amount (0 or more).');
       return;
     }
 
@@ -81,7 +84,7 @@ export function DepositManagementClient({
     const res = await addDepositAction({
       memberId,
       depositDate,
-      amount: parseFloat(amount),
+      amount: parsedAmount,
       paymentMethod,
       transactionId: transactionId || undefined,
       notes: notes || undefined,
@@ -94,7 +97,7 @@ export function DepositManagementClient({
       setTransactionId('');
       setNotes('');
     } else {
-      setError(res.error || 'Failed to record deposit');
+      setError(res.error || (language === 'bn' ? 'জমা সংরক্ষণ করতে সমস্যা হয়েছে।' : 'Failed to record deposit'));
     }
   };
 
@@ -111,8 +114,9 @@ export function DepositManagementClient({
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingDeposit) return;
-    if (!editAmount || parseFloat(editAmount) <= 0) {
-      setEditError('Please enter a valid deposit amount.');
+    const parsedAmount = parseFloat(editAmount.trim());
+    if (editAmount.trim() === '' || isNaN(parsedAmount) || parsedAmount < 0) {
+      setEditError(language === 'bn' ? 'সঠিক জমার পরিমাণ দিন (০ বা তার বেশি)।' : 'Please enter a valid deposit amount (0 or more).');
       return;
     }
 
@@ -121,7 +125,7 @@ export function DepositManagementClient({
 
     const res = await updateDepositAction(editingDeposit.id, {
       depositDate: editDate,
-      amount: parseFloat(editAmount),
+      amount: parsedAmount,
       paymentMethod: editPaymentMethod,
       transactionId: editTransactionId || undefined,
       notes: editNotes || undefined,
@@ -131,12 +135,12 @@ export function DepositManagementClient({
     if (res.success) {
       setEditingDeposit(null);
     } else {
-      setEditError(res.error || 'Failed to update deposit record.');
+      setEditError(res.error || (language === 'bn' ? 'জমা তথ্য আপডেট করতে ব্যর্থ হয়েছে।' : 'Failed to update deposit record.'));
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this deposit entry?')) return;
+    if (!confirm(language === 'bn' ? 'আপনি কি নিশ্চিত যে এই জমা এন্ট্রি মুছে ফেলতে চান?' : 'Are you sure you want to delete this deposit entry?')) return;
     await deleteDepositAction(id);
   };
 
@@ -146,17 +150,19 @@ export function DepositManagementClient({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Member Deposit Management
+            {language === 'bn' ? 'সদস্যদের জমা হিসাব ও ফান্ড কালেকশন' : 'Member Deposit Management'}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            Record member contributions into the common mess fund. Increases member balance without affecting meal rate.
+            {language === 'bn'
+              ? 'কমন মেস ফান্ডে সদস্যদের জমার রেকর্ড। এটি সদস্যের ব্যালেন্স বৃদ্ধি করে কিন্তু মিল রেটে কোনো প্রভাব ফেলে না।'
+              : 'Record member contributions into the common mess fund. Increases member balance without affecting meal rate.'}
           </p>
         </div>
 
         {isManager && !isClosed && (
           <Button onClick={() => setModalOpen(true)} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shrink-0">
             <Plus className="w-4 h-4" />
-            <span>Record Member Deposit</span>
+            <span>{language === 'bn' ? 'নতুন জমা এন্ট্রি করুন' : 'Record Member Deposit'}</span>
           </Button>
         )}
       </div>
@@ -164,7 +170,11 @@ export function DepositManagementClient({
       {isClosed && (
         <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs rounded-xl flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-          <span>This month is CLOSED and locked. Deposits cannot be added, edited or deleted.</span>
+          <span>
+            {language === 'bn'
+              ? 'এই মাসটি বন্ধ (CLOSED) ও লক করা হয়েছে। নতুন জমা যোগ, পরিবর্তন বা মুছে ফেলা যাবে না।'
+              : 'This month is CLOSED and locked. Deposits cannot be added, edited or deleted.'}
+          </span>
         </div>
       )}
 
@@ -172,13 +182,13 @@ export function DepositManagementClient({
       <div className="p-5 bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 rounded-2xl text-white shadow-md flex items-center justify-between">
         <div>
           <span className="text-xs uppercase tracking-wider text-emerald-300 font-semibold">
-            Total Fund Deposits Collected
+            {language === 'bn' ? 'মোট সংগৃহীত মেস ফান্ড জমা' : 'Total Fund Deposits Collected'}
           </span>
           <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1">
             {formatCurrency(totalCollected)}
           </h3>
           <p className="text-xs text-slate-300 mt-1">
-            Contributions across {deposits.length} recorded payments
+            {language === 'bn' ? `${deposits.length} টি পেমেন্ট রেকর্ড` : `Contributions across ${deposits.length} recorded payments`}
           </p>
         </div>
         <div className="p-3.5 bg-emerald-500/20 text-emerald-400 rounded-2xl border border-emerald-500/30 shrink-0">
@@ -193,20 +203,20 @@ export function DepositManagementClient({
             <table className="w-full text-left text-xs sm:text-sm text-slate-600 dark:text-slate-300">
               <thead className="bg-slate-50 dark:bg-slate-800/60 text-[11px] uppercase text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <th className="py-3 px-3 sm:px-4">Date</th>
-                  <th className="py-3 px-3 sm:px-4">Member Name</th>
-                  <th className="py-3 px-3 sm:px-4">Method</th>
-                  <th className="py-3 px-3 sm:px-4 hidden md:table-cell">Transaction ID</th>
-                  <th className="py-3 px-3 sm:px-4 hidden sm:table-cell">Notes</th>
-                  <th className="py-3 px-3 sm:px-4 text-right">Amount (৳)</th>
-                  {isManager && !isClosed && <th className="py-3 px-3 sm:px-4 text-right">Action</th>}
+                  <th className="py-3 px-3 sm:px-4">{language === 'bn' ? 'তারিখ' : 'Date'}</th>
+                  <th className="py-3 px-3 sm:px-4">{language === 'bn' ? 'সদস্যের নাম' : 'Member Name'}</th>
+                  <th className="py-3 px-3 sm:px-4">{language === 'bn' ? 'পেমেন্ট মাধ্যম' : 'Method'}</th>
+                  <th className="py-3 px-3 sm:px-4 hidden md:table-cell">{language === 'bn' ? 'ট্রানজ্যাকশন আইডি' : 'Transaction ID'}</th>
+                  <th className="py-3 px-3 sm:px-4 hidden sm:table-cell">{language === 'bn' ? 'নোট / বিবরণ' : 'Notes'}</th>
+                  <th className="py-3 px-3 sm:px-4 text-right">{language === 'bn' ? 'জমার পরিমাণ (৳)' : 'Amount (৳)'}</th>
+                  {isManager && !isClosed && <th className="py-3 px-3 sm:px-4 text-right">{language === 'bn' ? 'অ্যাকশন' : 'Action'}</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {deposits.length === 0 ? (
                   <tr>
                     <td colSpan={isManager && !isClosed ? 7 : 6} className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
-                      No deposit records found for this period.
+                      {language === 'bn' ? 'এই মাসে কোনো জমার রেকর্ড পাওয়া যায়নি।' : 'No deposit records found for this period.'}
                     </td>
                   </tr>
                 ) : (
@@ -227,7 +237,7 @@ export function DepositManagementClient({
                         {d.transactionId || '—'}
                       </td>
                       <td className="py-3 px-3 sm:px-4 text-xs text-slate-500 dark:text-slate-400 hidden sm:table-cell">
-                        {d.notes || 'Monthly advance'}
+                        {d.notes || (language === 'bn' ? 'মাসিক জমা' : 'Monthly advance')}
                       </td>
                       <td className="py-3 px-3 sm:px-4 text-right font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                         +{formatCurrency(d.amount)}
@@ -237,14 +247,14 @@ export function DepositManagementClient({
                           <button
                             onClick={() => handleOpenEditModal(d)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer"
-                            title="Edit Deposit"
+                            title={language === 'bn' ? 'জমা সংশোধন করুন' : 'Edit Deposit'}
                           >
                             <Edit3 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(d.id)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
-                            title="Delete Deposit"
+                            title={language === 'bn' ? 'জমা মুছে ফেলুন' : 'Delete Deposit'}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -266,7 +276,7 @@ export function DepositManagementClient({
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
               <h3 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <Wallet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                Record Member Deposit
+                {language === 'bn' ? 'সদস্যের জমা রেকর্ড করুন' : 'Record Member Deposit'}
               </h3>
               <button
                 onClick={() => setModalOpen(false)}
@@ -286,7 +296,7 @@ export function DepositManagementClient({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Depositing Member *
+                  {language === 'bn' ? 'জমা প্রদানকারী সদস্য *' : 'Depositing Member *'}
                 </label>
                 <select
                   value={memberId}
@@ -302,7 +312,7 @@ export function DepositManagementClient({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Deposit Date *
+                    {language === 'bn' ? 'জমার তারিখ *' : 'Deposit Date *'}
                   </label>
                   <input
                     type="date"
@@ -314,15 +324,16 @@ export function DepositManagementClient({
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Amount (৳) *
+                    {language === 'bn' ? 'জমার পরিমাণ (৳) * (০ বা তার বেশি)' : 'Amount (৳) * (0 or more)'}
                   </label>
                   <input
                     type="number"
                     step="0.01"
+                    min="0"
                     required
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    placeholder="e.g. 4000"
+                    placeholder={language === 'bn' ? 'যেমন: ০ বা ৪০০০' : 'e.g. 0 or 4000'}
                     className="w-full rounded-xl border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-emerald-500"
                   />
                 </div>
@@ -331,7 +342,7 @@ export function DepositManagementClient({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Payment Method *
+                    {language === 'bn' ? 'পেমেন্ট মাধ্যম *' : 'Payment Method *'}
                   </label>
                   <select
                     value={paymentMethod}
@@ -340,14 +351,14 @@ export function DepositManagementClient({
                   >
                     <option value="BKASH">bKash</option>
                     <option value="NAGAD">Nagad</option>
-                    <option value="CASH">Cash (Hand-to-hand)</option>
-                    <option value="BANK_TRANSFER">Bank Transfer</option>
-                    <option value="OTHER">Other</option>
+                    <option value="CASH">{language === 'bn' ? 'ক্যাশ / নগদ হাতে' : 'Cash (Hand-to-hand)'}</option>
+                    <option value="BANK_TRANSFER">{language === 'bn' ? 'ব্যাংক ট্রান্সফার' : 'Bank Transfer'}</option>
+                    <option value="OTHER">{language === 'bn' ? 'অন্যান্য' : 'Other'}</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Transaction ID (Optional)
+                    {language === 'bn' ? 'ট্রানজ্যাকশন আইডি (ঐচ্ছিক)' : 'Transaction ID (Optional)'}
                   </label>
                   <input
                     type="text"
@@ -361,13 +372,13 @@ export function DepositManagementClient({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Notes / Reference (Optional)
+                  {language === 'bn' ? 'নোট / বিবরণ (ঐচ্ছিক)' : 'Notes / Reference (Optional)'}
                 </label>
                 <input
                   type="text"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="e.g. November mess fund deposit"
+                  placeholder={language === 'bn' ? 'যেমন: নভেম্বর মাসের মেস ফান্ড জমা' : 'e.g. November mess fund deposit'}
                   className="w-full rounded-xl border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-emerald-500"
                 />
               </div>
@@ -378,10 +389,12 @@ export function DepositManagementClient({
                   variant="outline"
                   onClick={() => setModalOpen(false)}
                 >
-                  Cancel
+                  {language === 'bn' ? 'বাতিল' : 'Cancel'}
                 </Button>
                 <Button type="submit" disabled={loading} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                  {loading ? 'Saving...' : 'Record Deposit'}
+                  {loading
+                    ? (language === 'bn' ? 'সংরক্ষণ হচ্ছে...' : 'Saving...')
+                    : (language === 'bn' ? 'জমা সংরক্ষণ করুন' : 'Record Deposit')}
                 </Button>
               </div>
             </form>
@@ -396,7 +409,7 @@ export function DepositManagementClient({
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
               <h3 className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <Edit3 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                Edit Member Deposit
+                {language === 'bn' ? 'সদস্যের জমা সংশোধন করুন' : 'Edit Member Deposit'}
               </h3>
               <button
                 onClick={() => setEditingDeposit(null)}
@@ -416,7 +429,7 @@ export function DepositManagementClient({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Member
+                  {language === 'bn' ? 'সদস্য' : 'Member'}
                 </label>
                 <p className="px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold text-slate-900 dark:text-slate-100">
                   {editingDeposit.memberName}
@@ -426,7 +439,7 @@ export function DepositManagementClient({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Deposit Date *
+                    {language === 'bn' ? 'জমার তারিখ *' : 'Deposit Date *'}
                   </label>
                   <input
                     type="date"
@@ -438,14 +451,16 @@ export function DepositManagementClient({
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Amount (৳) *
+                    {language === 'bn' ? 'জমার পরিমাণ (৳) * (০ বা তার বেশি)' : 'Amount (৳) * (0 or more)'}
                   </label>
                   <input
                     type="number"
                     step="0.01"
+                    min="0"
                     required
                     value={editAmount}
                     onChange={(e) => setEditAmount(e.target.value)}
+                    placeholder="0"
                     className="w-full rounded-xl border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-emerald-500"
                   />
                 </div>
@@ -454,7 +469,7 @@ export function DepositManagementClient({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Payment Method *
+                    {language === 'bn' ? 'পেমেন্ট মাধ্যম *' : 'Payment Method *'}
                   </label>
                   <select
                     value={editPaymentMethod}
@@ -463,14 +478,14 @@ export function DepositManagementClient({
                   >
                     <option value="BKASH">bKash</option>
                     <option value="NAGAD">Nagad</option>
-                    <option value="CASH">Cash (Hand-to-hand)</option>
-                    <option value="BANK_TRANSFER">Bank Transfer</option>
-                    <option value="OTHER">Other</option>
+                    <option value="CASH">{language === 'bn' ? 'ক্যাশ / নগদ হাতে' : 'Cash (Hand-to-hand)'}</option>
+                    <option value="BANK_TRANSFER">{language === 'bn' ? 'ব্যাংক ট্রান্সফার' : 'Bank Transfer'}</option>
+                    <option value="OTHER">{language === 'bn' ? 'অন্যান্য' : 'Other'}</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Transaction ID (Optional)
+                    {language === 'bn' ? 'ট্রানজ্যাকশন আইডি (ঐচ্ছিক)' : 'Transaction ID (Optional)'}
                   </label>
                   <input
                     type="text"
@@ -483,7 +498,7 @@ export function DepositManagementClient({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Notes / Reference (Optional)
+                  {language === 'bn' ? 'নোট / বিবরণ (ঐচ্ছিক)' : 'Notes / Reference (Optional)'}
                 </label>
                 <input
                   type="text"
@@ -499,10 +514,12 @@ export function DepositManagementClient({
                   variant="outline"
                   onClick={() => setEditingDeposit(null)}
                 >
-                  Cancel
+                  {language === 'bn' ? 'বাতিল' : 'Cancel'}
                 </Button>
                 <Button type="submit" disabled={loading} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                  {loading ? 'Saving...' : 'Save Changes'}
+                  {loading
+                    ? (language === 'bn' ? 'সংরক্ষণ হচ্ছে...' : 'Saving...')
+                    : (language === 'bn' ? 'পরিবর্তন সংরক্ষণ করুন' : 'Save Changes')}
                 </Button>
               </div>
             </form>

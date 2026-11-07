@@ -97,7 +97,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   }));
 
   const memberMealsData = result.memberList.map((m) => ({
-    name: m.fullName.split(' ')[0],
+    name: m.fullName.trim(),
     meals: Number(m.totalMeals.toString()),
   }));
 

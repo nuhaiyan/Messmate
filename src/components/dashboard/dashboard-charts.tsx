@@ -117,20 +117,27 @@ export function DashboardCharts({
         </CardContent>
       </Card>
 
-      {/* 3. Member-wise Meal Comparison */}
+      {/* 3. Member-wise Meal Comparison - Display all members */}
       <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] bg-white dark:bg-slate-900 transition-all hover:shadow-md min-w-0 overflow-hidden">
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
             {t.dashboard.memberMealComparison}
           </CardTitle>
+          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 border border-orange-200/60 dark:border-orange-800/60">
+            {language === 'bn' ? `${memberMealsData.length} জন সদস্য` : `${memberMealsData.length} Members`}
+          </span>
         </CardHeader>
         <CardContent>
-          <div className="h-64 w-full">
+          <div
+            style={{ height: `${Math.max(280, memberMealsData.length * 36)}px` }}
+            className="w-full max-h-[520px] overflow-y-auto no-scrollbar"
+          >
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={memberMealsData.slice(0, 8)}
+                data={memberMealsData}
                 layout="vertical"
-                margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
+                margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                barSize={18}
               >
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="currentColor" className="text-slate-200 dark:text-slate-800" />
                 <XAxis type="number" tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} />
@@ -139,9 +146,14 @@ export function DashboardCharts({
                   type="category"
                   tickLine={false}
                   width={90}
+                  interval={0}
                   tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }}
                 />
                 <Tooltip
+                  formatter={(val: unknown) => {
+                    const num = typeof val === 'number' ? val : Number(val) || 0;
+                    return [`${num} ${language === 'bn' ? 'টি মিল' : 'meals'}`, language === 'bn' ? 'মিল সংখ্যা' : 'Meals'];
+                  }}
                   contentStyle={{ backgroundColor: '#0f172a', borderRadius: '10px', border: '1px solid #334155', color: '#fff' }}
                 />
                 <Bar dataKey="meals" name={language === 'bn' ? 'মিল সংখ্যা' : 'Meals'} fill="#fb923c" radius={[0, 6, 6, 0]} />
