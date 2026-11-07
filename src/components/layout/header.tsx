@@ -64,12 +64,12 @@ export function Header({
   const currentActiveMember = membersList.find((m) => m.id === activeMemberId);
 
   return (
-    <header className="h-16 px-4 md:px-8 border-b border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md flex items-center justify-between sticky top-0 z-30 shadow-2xs transition-colors">
-      <div className="flex items-center gap-2 sm:gap-3">
+    <header className="h-16 px-3 sm:px-4 md:px-8 border-b border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md flex items-center justify-between sticky top-0 z-30 shadow-2xs transition-colors w-full max-w-full overflow-hidden">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {onMobileMenuToggle && (
           <button
             onClick={onMobileMenuToggle}
-            className="md:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            className="md:hidden p-1.5 sm:p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
             aria-label="Toggle Navigation"
           >
             <Menu className="w-5 h-5" />
@@ -77,14 +77,16 @@ export function Header({
         )}
 
         {/* Month Selector */}
-        <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 rounded-xl px-2.5 sm:px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 shadow-2xs">
-          <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-500" />
-          <span className="font-semibold text-slate-600 dark:text-slate-400 hidden sm:inline">{t.dashboard.selectMonth}:</span>
+        <div className="flex items-center gap-1 sm:gap-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 rounded-xl px-2 sm:px-3 py-1 sm:py-1.5 text-xs text-slate-700 dark:text-slate-300 shadow-2xs">
+          <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-500 shrink-0" />
+          <span className="font-semibold text-slate-600 dark:text-slate-400 hidden sm:inline">
+            {t.dashboard?.selectMonth || 'Month'}:
+          </span>
           <select
             value={currentSelection}
             onChange={handleMonthChange}
-            aria-label={t.dashboard.selectMonth}
-            className="bg-transparent font-medium text-slate-900 dark:text-slate-100 border-none outline-hidden cursor-pointer"
+            aria-label={t.dashboard?.selectMonth || 'Select Month'}
+            className="bg-transparent font-medium text-slate-900 dark:text-slate-100 border-none outline-hidden cursor-pointer text-xs max-w-[105px] sm:max-w-none truncate"
           >
             {monthOptions.map((opt) => (
               <option key={opt.value} value={opt.value} className="dark:bg-slate-800 dark:text-slate-100">
@@ -101,13 +103,13 @@ export function Header({
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
+      <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
         {/* Meal rate pill */}
         {currentMealRate !== undefined && (
           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/50 rounded-full text-xs font-semibold">
             <TrendingUp className="w-3.5 h-3.5 text-orange-500" />
             <span>
-              {t.dashboard.currentMealRate}: <strong className="text-orange-900 dark:text-orange-200 font-bold">৳{currentMealRate}</strong>
+              {t.dashboard?.currentMealRate || 'Meal Rate'}: <strong className="text-orange-900 dark:text-orange-200 font-bold">৳{currentMealRate}</strong>
             </span>
           </div>
         )}
@@ -116,7 +118,7 @@ export function Header({
         <button
           onClick={toggleTheme}
           title={theme === 'dark' ? t.theme?.light || 'Switch to Light Mode' : t.theme?.dark || 'Switch to Dark Mode'}
-          className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+          className="p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer shrink-0"
           aria-label="Toggle Theme"
         >
           {theme === 'dark' ? (
@@ -127,10 +129,10 @@ export function Header({
         </button>
 
         {/* Language switch toggle */}
-        <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-xl p-0.5 bg-slate-50 dark:bg-slate-800/80">
+        <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-xl p-0.5 bg-slate-50 dark:bg-slate-800/80 shrink-0">
           <button
             onClick={() => setLanguage('en')}
-            className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-all cursor-pointer ${
+            className={`px-1.5 sm:px-2.5 py-0.5 sm:py-1 text-xs font-medium rounded-lg transition-all cursor-pointer ${
               language === 'en'
                 ? 'bg-white dark:bg-slate-700 text-orange-600 dark:text-orange-400 shadow-2xs font-bold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
@@ -140,7 +142,7 @@ export function Header({
           </button>
           <button
             onClick={() => setLanguage('bn')}
-            className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-all cursor-pointer ${
+            className={`px-1.5 sm:px-2.5 py-0.5 sm:py-1 text-xs font-medium rounded-lg transition-all cursor-pointer ${
               language === 'bn'
                 ? 'bg-white dark:bg-slate-700 text-orange-600 dark:text-orange-400 shadow-2xs font-bold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
@@ -153,7 +155,7 @@ export function Header({
         {/* Logged in User Profile Badge / Link to /profile */}
         <Link
           href="/profile"
-          className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 rounded-xl px-2.5 sm:px-3 py-1 text-xs hover:border-orange-400 dark:hover:border-orange-500 transition-colors"
+          className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 rounded-xl p-1.5 sm:px-3 sm:py-1 text-xs hover:border-orange-400 dark:hover:border-orange-500 transition-colors shrink-0"
           title="Open My Profile"
         >
           {currentActiveMember?.isPrimaryAdmin ? (
@@ -165,7 +167,7 @@ export function Header({
           ) : (
             <User className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
           )}
-          <span className="font-semibold text-slate-800 dark:text-slate-200 max-w-[100px] sm:max-w-[140px] truncate">
+          <span className="font-semibold text-slate-800 dark:text-slate-200 hidden sm:inline-block max-w-[140px] truncate">
             {currentActiveMember?.fullName || primaryAdminName}
           </span>
           <span className="text-[10px] text-slate-400 dark:text-slate-500 hidden xl:inline">
@@ -182,10 +184,10 @@ export function Header({
           }}
           disabled={isPending}
           title="Sign out of MessMate"
-          className="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800/60 transition-colors cursor-pointer"
+          className="flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1 rounded-xl text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800/60 transition-colors cursor-pointer shrink-0"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">{t.nav.logout || 'Logout'}</span>
+          <span className="hidden md:inline">{t.nav?.logout || 'Logout'}</span>
         </button>
       </div>
     </header>

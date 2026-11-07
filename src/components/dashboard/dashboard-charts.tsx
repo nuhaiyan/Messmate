@@ -45,7 +45,7 @@ export function DashboardCharts({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 my-6">
       {/* 1. Daily Meal Consumption */}
-      <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] bg-white dark:bg-slate-900 transition-all hover:shadow-md">
+      <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] bg-white dark:bg-slate-900 transition-all hover:shadow-md min-w-0 overflow-hidden">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center justify-between">
             <span>{t.dashboard.mealChartTitle}</span>
@@ -87,7 +87,7 @@ export function DashboardCharts({
       </Card>
 
       {/* 2. Daily Bazar Expenses */}
-      <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] bg-white dark:bg-slate-900 transition-all hover:shadow-md">
+      <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] bg-white dark:bg-slate-900 transition-all hover:shadow-md min-w-0 overflow-hidden">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center justify-between">
             <span>{t.dashboard.bazarChartTitle}</span>
@@ -118,7 +118,7 @@ export function DashboardCharts({
       </Card>
 
       {/* 3. Member-wise Meal Comparison */}
-      <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] bg-white dark:bg-slate-900 transition-all hover:shadow-md">
+      <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] bg-white dark:bg-slate-900 transition-all hover:shadow-md min-w-0 overflow-hidden">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
             {t.dashboard.memberMealComparison}
@@ -152,7 +152,7 @@ export function DashboardCharts({
       </Card>
 
       {/* 4. Deposits vs Total Expenses */}
-      <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] bg-white dark:bg-slate-900 transition-all hover:shadow-md">
+      <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] bg-white dark:bg-slate-900 transition-all hover:shadow-md min-w-0 overflow-hidden">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
             {t.dashboard.depositVsExpense}

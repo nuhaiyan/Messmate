@@ -273,7 +273,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       selectedYear={currentYear}
     >
       {/* 1. OVERVIEW & WELCOME HERO BANNER */}
-      <div className="mb-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 sm:p-7 shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all">
+      <div className="mb-6 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 sm:p-6 md:p-7 shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">

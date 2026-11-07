@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Sidebar } from './sidebar';
 import { Header, MemberOption } from './header';
-import { BottomNav } from './bottom-nav';
+import { MobileTopNav } from './mobile-top-nav';
 import { I18nProvider } from '@/lib/i18n/context';
 
 interface DashboardShellProps {
@@ -45,7 +45,7 @@ export function DashboardShell({
 
   return (
     <I18nProvider>
-      <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
+      <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors w-full max-w-full overflow-x-hidden">
         {/* Desktop Sidebar */}
         <div className="hidden md:block shrink-0">
           <Sidebar
@@ -85,7 +85,7 @@ export function DashboardShell({
         )}
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 w-full max-w-full overflow-x-hidden">
           <Header
             onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
             currentMealRate={currentMealRate}
@@ -96,11 +96,13 @@ export function DashboardShell({
             currentManagerName={currentManagerName}
             primaryAdminName={primaryAdminName}
           />
-          <main className="flex-1 p-3 sm:p-5 md:p-8 max-w-7xl w-full mx-auto pb-24 md:pb-8">
+
+          {/* Sticky Mobile Top Navigation (under Header, avoiding any bottom banner conflicts) */}
+          <MobileTopNav isAdminOrManager={isPrimaryAdmin || isAdmin || isManager} />
+
+          <main className="flex-1 p-3.5 sm:p-5 md:p-8 max-w-7xl w-full mx-auto min-w-0 pb-8">
             {children}
           </main>
-          {/* Mobile Bottom Navigation Bar */}
-          <BottomNav />
         </div>
       </div>
     </I18nProvider>
