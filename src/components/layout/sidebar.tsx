@@ -23,6 +23,7 @@ import {
   UserCheck,
   MessageSquare,
   Megaphone,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n/context';
@@ -38,6 +39,7 @@ interface SidebarProps {
   isManager?: boolean;
   currentManagerName?: string;
   primaryAdminName?: string;
+  onClose?: () => void;
 }
 
 export function Sidebar({
@@ -50,6 +52,7 @@ export function Sidebar({
   isManager = false,
   currentManagerName = 'Tanvir',
   primaryAdminName = 'Mohammad Tarek Hossen',
+  onClose,
 }: SidebarProps) {
   const pathname = usePathname();
   const { t } = useI18n();
@@ -110,10 +113,14 @@ export function Sidebar({
   }
 
   return (
-    <aside className="w-64 bg-slate-900 dark:bg-slate-950 border-r border-slate-800 flex flex-col shrink-0 min-h-screen text-slate-300 transition-colors">
+    <aside className="w-full h-full bg-slate-900 dark:bg-slate-950 border-r border-slate-800 flex flex-col shrink-0 text-slate-300 transition-colors">
       {/* Brand Header */}
-      <div className="h-16 px-6 flex items-center justify-between border-b border-slate-800/80 bg-slate-950/40">
-        <Link href="/dashboard" className="flex items-center gap-2.5">
+      <div className="h-16 px-5 sm:px-6 flex items-center justify-between border-b border-slate-800/80 bg-slate-950/40 shrink-0">
+        <Link
+          href="/dashboard"
+          onClick={onClose}
+          className="flex items-center gap-2.5"
+        >
           {messLogoUrl ? (
             <img
               src={messLogoUrl}
@@ -135,10 +142,21 @@ export function Sidebar({
             <p className="text-[11px] text-slate-400 truncate max-w-[130px]">{messName}</p>
           </div>
         </Link>
+
+        {/* Close Button for Mobile Drawer */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+            aria-label="Close menu drawer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Role Pill */}
-      <div className="px-4 py-2.5 mx-4 my-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50 flex items-center justify-between">
+      <div className="px-4 py-2.5 mx-4 my-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           {roleIcon}
           <span className="text-xs font-semibold text-slate-200 truncate">{roleTitle}</span>
@@ -149,10 +167,10 @@ export function Sidebar({
       </div>
 
       {/* System Administration Summary */}
-      <div className="mx-4 mb-2 p-2 rounded-lg bg-slate-950/60 border border-slate-800/70 text-[11px] space-y-1">
+      <div className="mx-4 mb-2 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/70 text-[11px] space-y-1 shrink-0">
         <div className="flex items-center justify-between">
           <span className="text-slate-400 flex items-center gap-1">
-            <Crown className="w-3 h-3 text-amber-400" /> Admin:
+            <Crown className="w-3.5 h-3.5 text-amber-400" /> Admin:
           </span>
           <span className="font-semibold text-slate-200 truncate max-w-[110px]" title={primaryAdminName}>
             {primaryAdminName}
@@ -160,7 +178,7 @@ export function Sidebar({
         </div>
         <div className="flex items-center justify-between">
           <span className="text-slate-400 flex items-center gap-1">
-            <ShieldCheck className="w-3 h-3 text-emerald-400" /> Manager:
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Manager:
           </span>
           <span className="font-semibold text-emerald-300 truncate max-w-[110px]" title={currentManagerName}>
             {currentManagerName}
@@ -178,8 +196,9 @@ export function Sidebar({
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all group',
+                'flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all group select-none',
                 isActive
                   ? 'bg-orange-500 text-white shadow-sm shadow-orange-950/40 font-semibold'
                   : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/80'
@@ -198,9 +217,10 @@ export function Sidebar({
       </nav>
 
       {/* Current Active Persona Footer */}
-      <div className="p-3 border-t border-slate-800/80 bg-slate-950/40">
+      <div className="p-3 border-t border-slate-800/80 bg-slate-950/40 shrink-0">
         <Link
           href="/profile"
+          onClick={onClose}
           className="flex items-center gap-2.5 overflow-hidden p-1.5 rounded-xl hover:bg-slate-800/60 transition-colors"
         >
           <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-orange-400 shrink-0">

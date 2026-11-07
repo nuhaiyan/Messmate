@@ -353,8 +353,9 @@ export function InteractiveDashboardCards({
       value: metrics.todayTotalMeals,
       subtitle: `Breakfast, lunch & dinner (${formatDate(todayDateStr)})`,
       icon: Utensils,
-      variant: 'bg-orange-50/80 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 border-orange-100 dark:border-orange-900/50 hover:border-orange-300',
-      badgeColor: 'bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300',
+      cardBg: 'bg-rose-50/70 dark:bg-rose-950/20 border-rose-200/70 dark:border-rose-900/40 hover:border-rose-400 dark:hover:border-rose-700',
+      iconBg: 'bg-rose-500 text-white shadow-xs shadow-rose-500/30',
+      badgeColor: 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300',
       destinationLabel: 'Daily Meals Sheet',
       destinationHref: `/meals?date=${todayDateStr}`,
     },
@@ -364,8 +365,9 @@ export function InteractiveDashboardCards({
       value: metrics.activeMembersCount,
       subtitle: 'Registered roommates participating in meals',
       icon: Users,
-      variant: 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200/80 hover:border-slate-300',
-      badgeColor: 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200',
+      cardBg: 'bg-indigo-50/70 dark:bg-indigo-950/20 border-indigo-200/70 dark:border-indigo-900/40 hover:border-indigo-400 dark:hover:border-indigo-700',
+      iconBg: 'bg-indigo-500 text-white shadow-xs shadow-indigo-500/30',
+      badgeColor: 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300',
       destinationLabel: 'Members Directory',
       destinationHref: '/members',
     },
@@ -375,7 +377,8 @@ export function InteractiveDashboardCards({
       value: metrics.deactivatedMembersCount,
       subtitle: 'Inactive members with preserved history',
       icon: UserX,
-      variant: 'bg-slate-100 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 border-slate-200 hover:border-slate-300',
+      cardBg: 'bg-slate-50 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:border-slate-300',
+      iconBg: 'bg-slate-600 text-white shadow-xs',
       badgeColor: 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
       destinationLabel: 'Deactivated Members List',
       destinationHref: '/members',
@@ -386,8 +389,9 @@ export function InteractiveDashboardCards({
       value: metrics.monthTotalMeals,
       subtitle: 'Total meals consumed this month',
       icon: CalendarCheck,
-      variant: 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200/80 hover:border-slate-300',
-      badgeColor: 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200',
+      cardBg: 'bg-teal-50/70 dark:bg-teal-950/20 border-teal-200/70 dark:border-teal-900/40 hover:border-teal-400 dark:hover:border-teal-700',
+      iconBg: 'bg-teal-600 text-white shadow-xs shadow-teal-600/30',
+      badgeColor: 'bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300',
       destinationLabel: 'Monthly Meal Reports',
       destinationHref: '/reports',
     },
@@ -397,7 +401,8 @@ export function InteractiveDashboardCards({
       value: formatCurrency(metrics.monthBazarExpense),
       subtitle: 'Total grocery & food expenses',
       icon: ShoppingCart,
-      variant: 'bg-amber-50/80 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/50 hover:border-amber-300',
+      cardBg: 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-200/70 dark:border-amber-900/40 hover:border-amber-400 dark:hover:border-amber-700',
+      iconBg: 'bg-amber-500 text-white shadow-xs shadow-amber-500/30',
       badgeColor: 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300',
       destinationLabel: 'Bazar Management',
       destinationHref: '/bazar',
@@ -408,7 +413,8 @@ export function InteractiveDashboardCards({
       value: metrics.isMealRateAvailable ? `৳${metrics.mealRate}` : 'N/A',
       subtitle: 'Total Bazar / Total Meals',
       icon: TrendingUp,
-      variant: 'bg-orange-500/15 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800/80 hover:border-orange-400',
+      cardBg: 'bg-orange-50/90 dark:bg-orange-950/25 border-orange-200/80 dark:border-orange-900/50 hover:border-orange-400 dark:hover:border-orange-600',
+      iconBg: 'bg-orange-600 text-white shadow-xs shadow-orange-600/40',
       badgeColor: 'bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300',
       destinationLabel: 'Meal Rate Breakdown',
       destinationHref: '/closing',
@@ -419,7 +425,8 @@ export function InteractiveDashboardCards({
       value: formatCurrency(metrics.totalDeposits),
       subtitle: 'Common mess fund contributions',
       icon: Wallet,
-      variant: 'bg-sky-50/80 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 border-sky-100 dark:border-sky-900/50 hover:border-sky-300',
+      cardBg: 'bg-sky-50/70 dark:bg-sky-950/20 border-sky-200/70 dark:border-sky-900/40 hover:border-sky-400 dark:hover:border-sky-700',
+      iconBg: 'bg-sky-500 text-white shadow-xs shadow-sky-500/30',
       badgeColor: 'bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300',
       destinationLabel: 'Deposits Management',
       destinationHref: '/deposits',
@@ -430,8 +437,9 @@ export function InteractiveDashboardCards({
       value: formatCurrency(metrics.totalAdditionalExpenses),
       subtitle: 'Cook, Electricity, Internet & WiFi',
       icon: Receipt,
-      variant: 'bg-violet-50/80 dark:bg-violet-950/40 text-violet-700 dark:text-violet-400 border-violet-100 dark:border-violet-900/50 hover:border-violet-300',
-      badgeColor: 'bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300',
+      cardBg: 'bg-purple-50/70 dark:bg-purple-950/20 border-purple-200/70 dark:border-purple-900/40 hover:border-purple-400 dark:hover:border-purple-700',
+      iconBg: 'bg-purple-500 text-white shadow-xs shadow-purple-500/30',
+      badgeColor: 'bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300',
       destinationLabel: 'Additional Expenses',
       destinationHref: '/additional-expenses',
     },
@@ -441,7 +449,8 @@ export function InteractiveDashboardCards({
       value: formatCurrency(metrics.totalNetDues),
       subtitle: 'Owed by members to mess fund',
       icon: AlertCircle,
-      variant: 'bg-rose-50/80 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-900/50 hover:border-rose-300',
+      cardBg: 'bg-rose-50/80 dark:bg-rose-950/25 border-rose-200/80 dark:border-rose-900/50 hover:border-rose-400 dark:hover:border-rose-700',
+      iconBg: 'bg-rose-600 text-white shadow-xs shadow-rose-600/30',
       badgeColor: 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300',
       destinationLabel: 'Dues & Advances Report',
       destinationHref: '/reports',
@@ -452,7 +461,8 @@ export function InteractiveDashboardCards({
       value: formatCurrency(metrics.totalNetAdvances),
       subtitle: 'Surplus credit held by mess fund',
       icon: PiggyBank,
-      variant: 'bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50 hover:border-emerald-300',
+      cardBg: 'bg-emerald-50/80 dark:bg-emerald-950/25 border-emerald-200/80 dark:border-emerald-900/50 hover:border-emerald-400 dark:hover:border-emerald-700',
+      iconBg: 'bg-emerald-600 text-white shadow-xs shadow-emerald-600/30',
       badgeColor: 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300',
       destinationLabel: 'Member Advance Statements',
       destinationHref: '/reports',
@@ -503,12 +513,12 @@ export function InteractiveDashboardCards({
                   setActiveDrilldown(card.type);
                 }
               }}
-              className="relative group p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-md hover:-translate-y-0.5 hover:border-orange-300 dark:hover:border-orange-500/50 transition-all duration-200 cursor-pointer flex flex-col justify-between"
+              className={`relative group p-4 sm:p-5 rounded-3xl border shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between min-w-0 ${card.cardBg}`}
             >
               <div>
                 {/* Top header: Title, Reset Button, and Icon */}
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 line-clamp-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 line-clamp-1">
                     {card.title}
                   </span>
 
@@ -518,12 +528,12 @@ export function InteractiveDashboardCards({
                       type="button"
                       onClick={(e) => handleOpenReset(e, card.type)}
                       title={canEdit ? `Reset ${card.title}` : 'Reset info (Managers & Admins only)'}
-                      className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer border border-transparent hover:border-rose-200"
+                      className="w-7 h-7 rounded-lg bg-white/80 dark:bg-slate-800/80 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer border border-slate-200/50 dark:border-slate-700/50 hover:border-rose-200"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
                     </button>
 
-                    <div className={`p-2 rounded-xl ${card.variant}`}>
+                    <div className={`p-2.5 rounded-2xl shrink-0 ${card.iconBg}`}>
                       <Icon className="w-4 h-4" />
                     </div>
                   </div>
@@ -531,21 +541,21 @@ export function InteractiveDashboardCards({
 
                 {/* Main Metric Value */}
                 <div className="mt-3">
-                  <h4 className="text-xl xl:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 truncate">
+                  <h4 className="text-xl xl:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-50 truncate">
                     {card.value}
                   </h4>
-                  <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
+                  <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400 line-clamp-1 font-medium">
                     {card.subtitle}
                   </p>
                 </div>
               </div>
 
               {/* Bottom interactive hint */}
-              <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+              <div className="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                 <span className="font-semibold flex items-center gap-1">
                   View details <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                 </span>
-                <span className="text-[10px] text-slate-400">Interactive</span>
+                <span className="text-[10px] text-slate-400 font-medium">Tap to edit</span>
               </div>
             </div>
           );

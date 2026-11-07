@@ -61,14 +61,14 @@ export function DashboardShell({
           />
         </div>
 
-        {/* Mobile Drawer */}
+        {/* Mobile Side Panel (Drawer) - Layered at z-[100] with backdrop so BottomNav stays cleanly underneath */}
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 flex md:hidden">
+          <div className="fixed inset-0 z-[100] flex md:hidden">
             <div
-              className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity"
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity"
               onClick={() => setMobileMenuOpen(false)}
             />
-            <div className="relative z-50 flex flex-col w-64 max-w-xs bg-slate-900 dark:bg-slate-950 shadow-2xl">
+            <div className="relative z-[101] flex flex-col w-72 max-w-[85vw] bg-slate-900 dark:bg-slate-950 shadow-2xl h-full overflow-hidden animate-in slide-in-from-left duration-200">
               <Sidebar
                 userRole={userRole}
                 userName={userName}
@@ -79,6 +79,7 @@ export function DashboardShell({
                 isManager={isManager}
                 currentManagerName={currentManagerName}
                 primaryAdminName={primaryAdminName}
+                onClose={() => setMobileMenuOpen(false)}
               />
             </div>
           </div>
@@ -101,8 +102,12 @@ export function DashboardShell({
             {children}
           </main>
 
-          {/* Square Shape Mobile Bottom Navigation Bar */}
-          <BottomNav isAdminOrManager={isPrimaryAdmin || isAdmin || isManager} />
+          {/* Floating Pill Bottom Navigation Dock - Stays completely under side panel when open */}
+          <BottomNav
+            isAdminOrManager={isPrimaryAdmin || isAdmin || isManager}
+            isDrawerOpen={mobileMenuOpen}
+            onToggleDrawer={() => setMobileMenuOpen(!mobileMenuOpen)}
+          />
         </div>
       </div>
     </I18nProvider>
