@@ -57,6 +57,8 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
       <MemberProfileClient
         member={data.member}
         accounting={data.accounting}
+        bazarSchedules={data.bazarSchedules}
+        fines={data.fines}
         recentMeals={data.recentMeals}
         recentDeposits={data.recentDeposits}
         recentBazar={data.recentBazar}

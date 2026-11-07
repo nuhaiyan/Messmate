@@ -14,6 +14,7 @@ function safeRevalidate(path: string) {
 }
 
 export type NoticeCategory =
+  | 'BAZAR_SCHEDULE'
   | 'BAZAR_LIST'
   | 'MEAL_SCHEDULE'
   | 'SHOPPING_REQ'

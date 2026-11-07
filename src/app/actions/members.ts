@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
-import { requireAuth, requireManager, requirePrimaryAdmin, setActiveMemberId } from '@/lib/auth/session';
+import { requireAuth, requireAdmin, requireManager, requirePrimaryAdmin, setActiveMemberId } from '@/lib/auth/session';
 import { logActivity } from '@/lib/audit/audit-logger';
 import { hashPassword } from '@/lib/auth/password';
 
@@ -29,7 +29,7 @@ export async function addMemberAction(data: {
   joiningDate?: string;
   initialBalance?: number;
 }) {
-  const session = await requireAuth();
+  const session = await requireAdmin();
 
   if (!data.fullName || data.fullName.trim().length === 0) {
     return { success: false, error: 'Member full name is required.' };
@@ -144,7 +144,7 @@ export async function updateMemberAction(memberId: string, data: {
 }
 
 export async function deactivateMemberAction(memberId: string) {
-  const session = await requireAuth();
+  const session = await requireAdmin();
 
   const member = await prisma.messMember.findUnique({
     where: { id: memberId },
@@ -182,7 +182,7 @@ export async function deactivateMemberAction(memberId: string) {
 }
 
 export async function activateMemberAction(memberId: string) {
-  const session = await requireAuth();
+  const session = await requireAdmin();
 
   const member = await prisma.messMember.findUnique({
     where: { id: memberId },
@@ -212,7 +212,7 @@ export async function activateMemberAction(memberId: string) {
 }
 
 export async function archiveMemberAction(memberId: string) {
-  const session = await requireAuth();
+  const session = await requireAdmin();
 
   const member = await prisma.messMember.findUnique({
     where: { id: memberId },

@@ -10,6 +10,7 @@ import { LatestNoticeBanner } from '@/components/dashboard/latest-notice-banner'
 import { PhoneNotificationBanner } from '@/components/notifications/phone-notification-button';
 import { DashboardSummaryTables } from '@/components/dashboard/dashboard-summary-tables';
 import { NoticeCategory } from '@/app/actions/notices';
+import { computeScheduleStatus, formatScheduleRange, toDhakaDateString } from '@/lib/bazar/schedule-utils';
 
 interface DashboardPageProps {
   searchParams: Promise<{ month?: string; year?: string }>;
@@ -143,13 +144,23 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     creatorName: recentNotices[0].creator?.name || 'Mess Administration',
   } : null;
 
-  // Recent Community Messages
-  const recentMessages = await prisma.message.findMany({
-    where: { conversation: { messId: session.messId }, isDeleted: false },
-    orderBy: { createdAt: 'desc' },
-    take: 3,
-    include: { sender: { select: { fullName: true, avatarUrl: true } } },
+  // Fetch Bazar Schedules for live Asia/Dhaka dashboard widget
+  const rawUpcomingSchedules = await prisma.bazarSchedule.findMany({
+    where: { messId: session.messId },
+    include: { member: { select: { fullName: true, phone: true } } },
+    orderBy: { startDate: 'asc' },
+    take: 5,
   });
+
+  const upcomingBazarSchedules = rawUpcomingSchedules.map((s) => ({
+    id: s.id,
+    memberName: s.member.fullName,
+    memberPhone: s.member.phone,
+    startDate: toDhakaDateString(s.startDate),
+    endDate: toDhakaDateString(s.endDate),
+    formattedRange: formatScheduleRange(s.startDate, s.endDate),
+    status: computeScheduleStatus(s.startDate, s.endDate),
+  }));
 
   const activeMembersCount = accountingData.members.filter((m) => m.isActive).length;
   const deactivatedMembersCount = allMembers.filter((m) => !m.isActive).length;
@@ -278,14 +289,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     publishedAt: n.publishedAt.toISOString(),
   }));
 
-  const summaryMessages = recentMessages.map((msg) => ({
-    id: msg.id,
-    senderName: msg.sender.fullName,
-    senderInitial: msg.sender.fullName.charAt(0),
-    content: msg.content,
-    createdAt: msg.createdAt.toISOString(),
-  }));
-
   return (
     <DashboardShell
       userRole={session.role}
@@ -372,7 +375,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         }}
       />
 
-      {/* 4. SUMMARY TABLES, NOTICES & COMMUNITY */}
+      {/* 4. SUMMARY TABLES, NOTICES & BAZAR SCHEDULE */}
       <DashboardSummaryTables
         memberList={summaryMembers}
         totalNetAdvances={Number(result.totalNetAdvances.toString())}
@@ -381,7 +384,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         recentDeposits={summaryDeposits}
         recentActivities={summaryActivities}
         recentNotices={summaryNotices}
-        recentMessages={summaryMessages}
+        upcomingBazarSchedules={upcomingBazarSchedules}
       />
     </DashboardShell>
   );

@@ -3,9 +3,10 @@ import { requireAuth } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
 import { DashboardShell } from '@/components/layout/dashboard-shell';
 import { BazarManagementClient } from './bazar-management-client';
+import { computeScheduleStatus, formatScheduleRange, toDhakaDateString } from '@/lib/bazar/schedule-utils';
 
 interface BazarPageProps {
-  searchParams: Promise<{ month?: string; year?: string }>;
+  searchParams: Promise<{ month?: string; year?: string; tab?: string }>;
 }
 
 export default async function BazarPage({ searchParams }: BazarPageProps) {
@@ -14,6 +15,7 @@ export default async function BazarPage({ searchParams }: BazarPageProps) {
 
   const currentYear = sp.year ? parseInt(sp.year) : 2026;
   const currentMonth = sp.month ? parseInt(sp.month) : 11;
+  const initialTab = sp.tab || 'schedule';
 
   const period = await prisma.monthlyPeriod.findUnique({
     where: {
@@ -40,10 +42,42 @@ export default async function BazarPage({ searchParams }: BazarPageProps) {
     orderBy: { fullName: 'asc' },
   });
 
+  // Query Bazar Schedules
+  const rawSchedules = await prisma.bazarSchedule.findMany({
+    where: {
+      messId: session.messId,
+    },
+    include: {
+      member: {
+        select: {
+          id: true,
+          fullName: true,
+          avatarUrl: true,
+          phone: true,
+          isActive: true,
+        },
+      },
+    },
+    orderBy: { startDate: 'asc' },
+  });
+
+  const schedules = rawSchedules.map((s) => ({
+    id: s.id,
+    memberId: s.memberId,
+    memberName: s.member.fullName,
+    memberAvatar: s.member.avatarUrl,
+    memberPhone: s.member.phone,
+    startDate: toDhakaDateString(s.startDate),
+    endDate: toDhakaDateString(s.endDate),
+    formattedRange: formatScheduleRange(s.startDate, s.endDate),
+    status: computeScheduleStatus(s.startDate, s.endDate),
+    notes: s.notes,
+  }));
+
   const primaryAdmin = allMembers.find((m) => m.isPrimaryAdmin) || { fullName: 'Mohammad Tarek Hossen' };
   const currentManager = allMembers.find((m) => m.isManager) || { fullName: 'Tanvir' };
 
-  // Only active members can be selected as personal payers
+  // Only active members can be selected as personal payers or assigned schedules
   const activeMembers = allMembers.filter((m) => m.isActive && !m.isArchived);
 
   const expenseItems = expenses.map((e) => ({
@@ -91,9 +125,13 @@ export default async function BazarPage({ searchParams }: BazarPageProps) {
     >
       <BazarManagementClient
         expenses={expenseItems}
+        schedules={schedules}
         members={memberOptions}
         isManager={canManageBazar}
         isClosed={isClosed}
+        initialTab={initialTab}
+        currentMonth={currentMonth}
+        currentYear={currentYear}
       />
     </DashboardShell>
   );

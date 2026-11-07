@@ -46,6 +46,12 @@ const CATEGORY_MAP: Record<
     icon: Megaphone,
     badgeClass: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-800',
   },
+  BAZAR_SCHEDULE: {
+    labelEn: 'Bazar Schedule',
+    labelBn: 'বাজার শিডিউল',
+    icon: Calendar,
+    badgeClass: 'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200 border-amber-300 dark:border-amber-700',
+  },
   BAZAR_LIST: {
     labelEn: 'Bazar List',
     labelBn: 'বাজার তালিকা',

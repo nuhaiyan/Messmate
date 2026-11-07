@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { Sidebar } from './sidebar';
 import { Header, MemberOption } from './header';
-import { BottomNav } from './bottom-nav';
 import { I18nProvider } from '@/lib/i18n/context';
 
 interface DashboardShellProps {
@@ -96,18 +95,14 @@ export function DashboardShell({
             activeMemberId={activeMemberId}
             currentManagerName={currentManagerName}
             primaryAdminName={primaryAdminName}
+            isPrimaryAdmin={isPrimaryAdmin}
+            isAdmin={isAdmin}
+            isManager={isManager}
           />
 
-          <main className="flex-1 p-3.5 sm:p-5 md:p-8 max-w-7xl w-full mx-auto min-w-0 pb-28 md:pb-8">
+          <main className="flex-1 p-3.5 sm:p-5 md:p-8 max-w-7xl w-full mx-auto min-w-0 pb-8">
             {children}
           </main>
-
-          {/* Floating Pill Bottom Navigation Dock - Stays completely under side panel when open */}
-          <BottomNav
-            isAdminOrManager={isPrimaryAdmin || isAdmin || isManager}
-            isDrawerOpen={mobileMenuOpen}
-            onToggleDrawer={() => setMobileMenuOpen(!mobileMenuOpen)}
-          />
         </div>
       </div>
     </I18nProvider>

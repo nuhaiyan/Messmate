@@ -106,6 +106,10 @@ model Mess {
   conversations         Conversation[]
   pushSubscriptions     PushSubscription[]
   notifications         Notification[]
+  bazarSchedules        BazarSchedule[]
+  fines                 Fine[]
+  maintenanceExpenses   MaintenanceExpense[]
+  fineFundTransactions  FineFundTransaction[]
 
   @@map("messes")
 }
@@ -151,6 +155,9 @@ model MessMember {
   sentMessages          Message[]     @relation("SentMessages")
   pushSubscriptions     PushSubscription[]
   notifications         Notification[]
+  bazarSchedules        BazarSchedule[]
+  fines                 Fine[]
+  fineFundTransactions  FineFundTransaction[]
 
   @@unique([messId, userId])
   @@index([messId, isActive, isArchived])
@@ -574,4 +581,94 @@ model Notification {
   @@index([messId, memberId, isRead])
   @@index([createdAt])
   @@map("notifications")
+}
+
+model BazarSchedule {
+  id          String     @id @default(cuid())
+  messId      String
+  memberId    String
+  startDate   DateTime
+  endDate     DateTime
+  status      String     @default("UPCOMING") // UPCOMING, ONGOING, COMPLETED
+  notes       String?
+  createdById String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  mess        Mess       @relation(fields: [messId], references: [id], onDelete: Cascade)
+  member      MessMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([messId, startDate, endDate])
+  @@index([memberId])
+  @@map("bazar_schedules")
+}
+
+model Fine {
+  id                   String                @id @default(cuid())
+  messId               String
+  memberId             String
+  amount               Decimal               @db.Decimal(12, 2)
+  reason               String
+  fineDate             DateTime
+  isPaid               Boolean               @default(false)
+  paidAt               DateTime?
+  paymentMethod        PaymentMethod?        @default(CASH)
+  transactionId        String?
+  notes                String?
+  createdById          String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  mess                 Mess                  @relation(fields: [messId], references: [id], onDelete: Cascade)
+  member               MessMember            @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  fineFundTransactions FineFundTransaction[]
+
+  @@index([messId, isPaid])
+  @@index([memberId])
+  @@map("fines")
+}
+
+model MaintenanceExpense {
+  id                   String                @id @default(cuid())
+  messId               String
+  title                String
+  description          String?
+  amount               Decimal               @db.Decimal(12, 2)
+  expenseDate          DateTime
+  paidFromFineFund     Boolean               @default(true)
+  receiptUrl           String?
+  category             String                @default("MAINTENANCE")
+  createdById          String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  mess                 Mess                  @relation(fields: [messId], references: [id], onDelete: Cascade)
+  fineFundTransactions FineFundTransaction[]
+
+  @@index([messId, expenseDate])
+  @@map("maintenance_expenses")
+}
+
+model FineFundTransaction {
+  id                   String              @id @default(cuid())
+  messId               String
+  type                 String              // "FINE_COLLECTION" | "MAINTENANCE_EXPENSE"
+  amount               Decimal             @db.Decimal(12, 2)
+  date                 DateTime
+  description          String
+  memberId             String?
+  fineId               String?
+  maintenanceExpenseId String?
+  createdById          String?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  mess                 Mess                @relation(fields: [messId], references: [id], onDelete: Cascade)
+  member               MessMember?         @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  fine                 Fine?               @relation(fields: [fineId], references: [id], onDelete: SetNull)
+  maintenanceExpense   MaintenanceExpense? @relation(fields: [maintenanceExpenseId], references: [id], onDelete: SetNull)
+
+  @@index([messId, type, date])
+  @@index([memberId])
+  @@map("fine_fund_transactions")
 }

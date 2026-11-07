@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
-import { requireAuth, requireManager } from '@/lib/auth/session';
+import { requireAuth, requireAdmin } from '@/lib/auth/session';
 import { logActivity } from '@/lib/audit/audit-logger';
 
 function safeRevalidate(path: string) {
@@ -79,7 +79,7 @@ export async function updateMessProfileAction(data: {
   description?: string | null;
   establishedDate?: string | null;
 }) {
-  const session = await requireManager();
+  const session = await requireAdmin();
 
   const trimmedName = data.name.trim();
   if (!trimmedName) {

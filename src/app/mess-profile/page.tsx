@@ -27,7 +27,7 @@ export default async function MessProfilePage() {
   const primaryAdmin = allMembers.find((m) => m.isPrimaryAdmin) || { fullName: 'Mohammad Tarek Hossen' };
   const currentManager = allMembers.find((m) => m.isManager) || { fullName: 'Tanvir' };
 
-  const isManagerOrAdmin = session.isPrimaryAdmin || session.isAdmin || session.isManager;
+  const canEditProfile = session.isPrimaryAdmin || session.isAdmin;
 
   return (
     <DashboardShell
@@ -61,7 +61,7 @@ export default async function MessProfilePage() {
           activeMemberCount: messData.activeMemberCount,
           createdAt: messData.createdAt,
         }}
-        isManagerOrAdmin={isManagerOrAdmin}
+        isManagerOrAdmin={canEditProfile}
         primaryAdminName={primaryAdmin.fullName}
       />
     </DashboardShell>

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth/session';
 import { getMonthAccountingData } from '@/app/actions/closing';
 import { logActivity } from '@/lib/audit/audit-logger';
+import { computeScheduleStatus, formatScheduleRange, toDhakaDateString } from '@/lib/bazar/schedule-utils';
 
 function safeRevalidate(path: string) {
   try {
@@ -21,6 +22,12 @@ export async function getMemberProfileDataAction(params?: {
 }) {
   const session = await requireAuth();
   const targetMemberId = params?.memberId || session.memberId;
+  const isManagement = session.isPrimaryAdmin || session.isAdmin || session.isManager;
+
+  // Security Check: General Members can ONLY view their own profile and financial records
+  if (!isManagement && targetMemberId !== session.memberId) {
+    throw new Error('Access Denied: General Members can only view their own personal profile.');
+  }
 
   // Verify permission: Members can view their own or roommates in the same mess
   const member = await prisma.messMember.findFirst({
@@ -103,6 +110,41 @@ export async function getMemberProfileDataAction(params?: {
     take: 10,
   });
 
+  // Fetch Bazar Schedules for this member
+  const rawSchedules = await prisma.bazarSchedule.findMany({
+    where: {
+      messId: session.messId,
+      memberId: targetMemberId,
+    },
+    orderBy: { startDate: 'desc' },
+  });
+
+  const schedules = rawSchedules.map((s) => ({
+    id: s.id,
+    startDate: toDhakaDateString(s.startDate),
+    endDate: toDhakaDateString(s.endDate),
+    formattedRange: formatScheduleRange(s.startDate, s.endDate),
+    status: computeScheduleStatus(s.startDate, s.endDate),
+    notes: s.notes,
+  }));
+
+  const upcomingSchedules = schedules.filter((s) => s.status === 'UPCOMING');
+  const currentSchedules = schedules.filter((s) => s.status === 'ONGOING');
+  const completedSchedules = schedules.filter((s) => s.status === 'COMPLETED');
+
+  // Fetch Fines for this member
+  const memberFines = await prisma.fine.findMany({
+    where: {
+      messId: session.messId,
+      memberId: targetMemberId,
+    },
+    orderBy: { fineDate: 'desc' },
+  });
+
+  const totalFineAmount = memberFines.reduce((sum, f) => sum + Number(f.amount), 0);
+  const paidFineAmount = memberFines.filter((f) => f.isPaid).reduce((sum, f) => sum + Number(f.amount), 0);
+  const unpaidFineAmount = memberFines.filter((f) => !f.isPaid).reduce((sum, f) => sum + Number(f.amount), 0);
+
   const isOwnProfile = session.memberId === targetMemberId;
   const canEdit = isOwnProfile || session.isPrimaryAdmin || session.isAdmin || session.isManager;
 
@@ -120,11 +162,33 @@ export async function getMemberProfileDataAction(params?: {
       isPrimaryAdmin: member.isPrimaryAdmin,
       isAdmin: member.isAdmin,
       isManager: member.isManager,
+      initialOpeningBalance: Number(member.initialOpeningBalance || 0),
     },
     isOwnProfile,
     canEdit,
     currentMonth,
     currentYear,
+    bazarSchedules: {
+      all: schedules,
+      upcoming: upcomingSchedules,
+      current: currentSchedules,
+      completed: completedSchedules,
+    },
+    fines: {
+      totalFineAmount,
+      paidFineAmount,
+      unpaidFineAmount,
+      list: memberFines.map((f) => ({
+        id: f.id,
+        amount: Number(f.amount),
+        reason: f.reason,
+        fineDate: f.fineDate.toISOString().split('T')[0],
+        isPaid: f.isPaid,
+        paidAt: f.paidAt ? f.paidAt.toISOString() : null,
+        paymentMethod: f.paymentMethod || 'CASH',
+        notes: f.notes,
+      })),
+    },
     accounting: {
       totalMeals: personalAccount ? Number(personalAccount.totalMeals.toString()) : 0,
       breakfast: bfSum,
@@ -142,6 +206,7 @@ export async function getMemberProfileDataAction(params?: {
       netBalance: personalAccount ? Number(personalAccount.closingBalance.toString()) : 0,
       dueAmount: personalAccount ? Number(personalAccount.dueAmount.toString()) : 0,
       advanceAmount: personalAccount ? Number(personalAccount.advanceAmount.toString()) : 0,
+      totalFine: totalFineAmount,
       balanceStatus: personalAccount?.isDue
         ? 'DUE'
         : personalAccount?.isAdvance
@@ -188,13 +253,32 @@ export async function updateMemberProfileAction(data: {
 }) {
   const session = await requireAuth();
   const targetMemberId = data.memberId || session.memberId;
+  const isManagement = session.isPrimaryAdmin || session.isAdmin || session.isManager;
 
-  // Security check: Only manager/admin can edit other members' profiles
-  if (targetMemberId !== session.memberId) {
-    const hasAuthority = session.isPrimaryAdmin || session.isAdmin || session.isManager;
-    if (!hasAuthority) {
-      return { success: false, error: 'Access Denied: You cannot modify other members’ profiles.' };
+  // General Member Permission: General members can ONLY change their OWN Profile Picture
+  if (!isManagement) {
+    if (targetMemberId !== session.memberId) {
+      return { success: false, error: 'Access Denied: General members cannot modify other members’ information.' };
     }
+    // Update avatarUrl and optional bio only
+    await prisma.messMember.update({
+      where: { id: session.memberId },
+      data: {
+        avatarUrl: data.avatarUrl !== undefined ? data.avatarUrl : undefined,
+        bio: data.bio !== undefined ? data.bio.trim() : undefined,
+      },
+    });
+    if (data.avatarUrl !== undefined) {
+      await prisma.user.update({
+        where: { id: session.userId },
+        data: { avatarUrl: data.avatarUrl },
+      });
+    }
+    safeRevalidate('/profile');
+    safeRevalidate('/members');
+    safeRevalidate(`/members/${session.memberId}`);
+    safeRevalidate('/dashboard');
+    return { success: true };
   }
 
   const trimmedName = data.fullName.trim();

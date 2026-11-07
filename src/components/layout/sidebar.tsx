@@ -57,41 +57,37 @@ export function Sidebar({
   const pathname = usePathname();
   const { t } = useI18n();
 
-  // Any management authority (Primary Admin, Shared Admin, or Manager) has full operational nav
+  // Any management authority (Primary Admin, Shared Admin, or Manager) has operational nav
   const hasManagerAccess = isPrimaryAdmin || isAdmin || isManager;
+  const isStrictAdmin = isPrimaryAdmin || isAdmin;
 
-  const managerNav = [
-    { name: t.nav.dashboard, href: '/dashboard', icon: LayoutDashboard },
-    { name: t.nav.messProfile || 'Mess Profile', href: '/mess-profile', icon: Building2 },
-    { name: t.nav.myProfile || 'My Profile', href: '/profile', icon: UserCheck },
-    { name: t.nav.notices || 'Notice Board', href: '/notices', icon: Megaphone },
-    { name: t.nav.messages || 'Community Chat', href: '/messages', icon: MessageSquare },
-    { name: 'Members & Roles', href: '/members', icon: Users },
-    { name: t.nav.dailyMeals, href: '/meals', icon: Utensils },
-    { name: t.nav.bazarExpenses, href: '/bazar', icon: ShoppingCart },
-    { name: t.nav.deposits, href: '/deposits', icon: Wallet },
-    { name: t.nav.additionalExpenses, href: '/additional-expenses', icon: Receipt },
-    { name: t.nav.monthlyAccounting, href: '/closing', icon: FileCheck2 },
-    { name: t.nav.reports, href: '/reports', icon: BarChart3 },
-    { name: t.nav.memberLedger, href: '/my-ledger', icon: BookOpenText },
-    { name: t.nav.activityLogs, href: '/activities', icon: History },
+  // 9 Modules Navigation for Admin / Manager
+  const managementNav = [
+    { name: t.nav?.dashboard || 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Members', href: '/members', icon: Users },
+    { name: t.nav?.dailyMeals || 'Meals', href: '/meals', icon: Utensils },
+    { name: t.nav?.bazarExpenses || 'Bazar Management', href: '/bazar', icon: ShoppingCart },
+    { name: 'Finance & Fine Fund', href: '/finance', icon: Wallet },
+    { name: t.nav?.monthlyAccounting || 'Monthly Closing', href: '/closing', icon: FileCheck2 },
+    { name: t.nav?.notices || 'Mess Notice', href: '/notices', icon: Megaphone },
+    { name: t.nav?.reports || 'Reports & Analytics', href: '/reports', icon: BarChart3 },
+    ...(isStrictAdmin ? [{ name: 'Settings & Admin', href: '/mess-profile', icon: Building2 }] : []),
+    { name: t.nav?.myProfile || 'My Profile', href: '/profile', icon: UserCheck },
+    { name: t.nav?.memberLedger || 'Member Ledger', href: '/my-ledger', icon: BookOpenText },
+    ...(isStrictAdmin ? [{ name: t.nav?.activityLogs || 'Activity Logs', href: '/activities', icon: History }] : []),
   ];
 
+  // Limited Navigation for General Members (only allowed actions)
   const memberNav = [
-    { name: t.nav.dashboard, href: '/dashboard', icon: LayoutDashboard },
-    { name: t.nav.myProfile || 'My Profile', href: '/profile', icon: UserCheck },
-    { name: t.nav.notices || 'Notice Board', href: '/notices', icon: Megaphone },
-    { name: t.nav.messages || 'Community Chat', href: '/messages', icon: MessageSquare },
+    { name: t.nav?.dashboard || 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: t.nav?.myProfile || 'My Profile', href: '/profile', icon: UserCheck },
+    { name: t.nav?.dailyMeals || 'Daily Meals', href: '/meals', icon: Utensils },
+    { name: t.nav?.bazarExpenses || 'Bazar Schedule', href: '/bazar', icon: ShoppingCart },
+    { name: t.nav?.notices || 'Mess Notice', href: '/notices', icon: Megaphone },
     { name: 'My Personal Ledger', href: '/my-ledger', icon: BookOpenText },
-    { name: t.nav.messProfile || 'Mess Profile', href: '/mess-profile', icon: Building2 },
-    { name: t.nav.dailyMeals, href: '/meals', icon: Utensils },
-    { name: t.nav.bazarExpenses, href: '/bazar', icon: ShoppingCart },
-    { name: t.nav.deposits, href: '/deposits', icon: Wallet },
-    { name: t.nav.additionalExpenses, href: '/additional-expenses', icon: Receipt },
-    { name: t.nav.reports, href: '/reports', icon: BarChart3 },
   ];
 
-  const navItems = hasManagerAccess ? managerNav : memberNav;
+  const navItems = hasManagerAccess ? managementNav : memberNav;
 
   // Determine current badge
   let roleTitle = 'Mess Member';

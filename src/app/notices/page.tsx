@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { DashboardShell } from '@/components/layout/dashboard-shell';
 import { NoticesClient } from './notices-client';
 import { getNoticesAction } from '@/app/actions/notices';
+import { computeScheduleStatus, formatScheduleRange, toDhakaDateString } from '@/lib/bazar/schedule-utils';
 
 interface NoticesPageProps {
   searchParams: Promise<{ month?: string; year?: string; category?: string }>;
@@ -22,6 +23,35 @@ export default async function NoticesPage({ searchParams }: NoticesPageProps) {
     month: selectedMonth,
     year: selectedYear,
   });
+
+  // Query Bazar Schedules for live synchronization on Notice Board
+  const rawSchedules = await prisma.bazarSchedule.findMany({
+    where: {
+      messId: session.messId,
+    },
+    include: {
+      member: {
+        select: {
+          id: true,
+          fullName: true,
+          avatarUrl: true,
+          phone: true,
+        },
+      },
+    },
+    orderBy: { startDate: 'asc' },
+  });
+
+  const bazarSchedules = rawSchedules.map((s) => ({
+    id: s.id,
+    memberName: s.member.fullName,
+    memberPhone: s.member.phone,
+    startDate: toDhakaDateString(s.startDate),
+    endDate: toDhakaDateString(s.endDate),
+    formattedRange: formatScheduleRange(s.startDate, s.endDate),
+    status: computeScheduleStatus(s.startDate, s.endDate),
+    notes: s.notes,
+  }));
 
   const mess = await prisma.mess.findUnique({
     where: { id: session.messId },
@@ -62,6 +92,7 @@ export default async function NoticesPage({ searchParams }: NoticesPageProps) {
     >
       <NoticesClient
         initialNotices={data.notices}
+        bazarSchedules={bazarSchedules}
         isManagerOrAdmin={data.isManagerOrAdmin}
         selectedMonth={selectedMonth}
         selectedYear={selectedYear}

@@ -46,6 +46,7 @@ interface MemberData {
   isPrimaryAdmin: boolean;
   isAdmin: boolean;
   isManager: boolean;
+  initialOpeningBalance?: number;
 }
 
 interface PersonalAccounting {
@@ -63,10 +64,31 @@ interface PersonalAccounting {
   netBalance: number;
   dueAmount: number;
   advanceAmount: number;
+  totalFine?: number;
   balanceStatus: string;
 }
 
-interface MealRecord {
+export interface BazarScheduleRecord {
+  id: string;
+  startDate: string;
+  endDate: string;
+  formattedRange: string;
+  status: 'UPCOMING' | 'ONGOING' | 'COMPLETED';
+  notes?: string | null;
+}
+
+export interface FineRecord {
+  id: string;
+  amount: number;
+  reason: string;
+  fineDate: string;
+  isPaid: boolean;
+  paidAt?: string | null;
+  paymentMethod?: string | null;
+  notes?: string | null;
+}
+
+export interface MealRecord {
   id: string;
   date: string;
   breakfast: number;
@@ -75,22 +97,22 @@ interface MealRecord {
   totalMeals: number;
 }
 
-interface DepositRecord {
+export interface DepositRecord {
   id: string;
   date: string;
   amount: number;
   method: string;
-  notes: string | null;
+  notes?: string | null;
 }
 
-interface BazarRecord {
+export interface BazarRecord {
   id: string;
   date: string;
   title: string;
   amount: number;
 }
 
-interface ExpenseRecord {
+export interface ExpenseRecord {
   id: string;
   date: string;
   title: string;
@@ -101,6 +123,18 @@ interface ExpenseRecord {
 interface MemberProfileClientProps {
   member: MemberData;
   accounting: PersonalAccounting;
+  bazarSchedules?: {
+    all: BazarScheduleRecord[];
+    upcoming: BazarScheduleRecord[];
+    current: BazarScheduleRecord[];
+    completed: BazarScheduleRecord[];
+  };
+  fines?: {
+    totalFineAmount: number;
+    paidFineAmount: number;
+    unpaidFineAmount: number;
+    list: FineRecord[];
+  };
   recentMeals: MealRecord[];
   recentDeposits: DepositRecord[];
   recentBazar: BazarRecord[];
@@ -114,6 +148,8 @@ interface MemberProfileClientProps {
 export function MemberProfileClient({
   member: initialMember,
   accounting,
+  bazarSchedules,
+  fines,
   recentMeals: initialMeals,
   recentDeposits,
   recentBazar,
@@ -126,7 +162,7 @@ export function MemberProfileClient({
   const { t } = useI18n();
   const [member, setMember] = useState(initialMember);
   const [meals, setMeals] = useState(initialMeals);
-  const [activeTab, setActiveTab] = useState<'meals' | 'deposits' | 'bazar' | 'expenses'>('meals');
+  const [activeTab, setActiveTab] = useState<'overview' | 'meals' | 'deposits' | 'bazar' | 'expenses' | 'fines'>('overview');
 
   // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -589,48 +625,251 @@ export function MemberProfileClient({
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
         <div className="flex border-b border-slate-200 dark:border-slate-800 px-4 pt-3 gap-2 overflow-x-auto">
           <button
-            onClick={() => setActiveTab('meals')}
+            onClick={() => setActiveTab('overview')}
             className={`px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
-              activeTab === 'meals'
-                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
+              activeTab === 'overview'
+                ? 'border-orange-500 text-orange-600 dark:text-orange-400'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
-            {t.profile?.dailyMealHistory || 'Daily Meals'} ({meals.length})
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('meals')}
+            className={`px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
+              activeTab === 'meals'
+                ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            {t.profile?.dailyMealHistory || 'Meal History'} ({meals.length})
           </button>
           <button
             onClick={() => setActiveTab('deposits')}
             className={`px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
               activeTab === 'deposits'
-                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
+                ? 'border-orange-500 text-orange-600 dark:text-orange-400'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
-            {t.profile?.depositHistory || 'Deposits'} ({recentDeposits.length})
+            {t.profile?.depositHistory || 'Deposit History'} ({recentDeposits.length})
           </button>
           <button
             onClick={() => setActiveTab('bazar')}
             className={`px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
               activeTab === 'bazar'
-                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
+                ? 'border-orange-500 text-orange-600 dark:text-orange-400'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
-            {t.profile?.bazarHistory || 'Bazar Purchases'} ({recentBazar.length})
+            {t.profile?.bazarHistory || 'Bazar History'} ({recentBazar.length + (bazarSchedules?.all.length || 0)})
           </button>
           <button
             onClick={() => setActiveTab('expenses')}
             className={`px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
               activeTab === 'expenses'
-                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
+                ? 'border-orange-500 text-orange-600 dark:text-orange-400'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
-            {t.profile?.expenseHistory || 'Assigned Expenses'} ({recentExpenses.length})
+            {t.profile?.expenseHistory || 'Expense History'} ({recentExpenses.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('fines')}
+            className={`px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
+              activeTab === 'fines'
+                ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            Fine History ({fines?.list.length || 0})
           </button>
         </div>
 
         <div className="p-4">
+          {/* TAB 0: OVERVIEW */}
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              {/* Personal Details & Financial Overview Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Personal Information */}
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Personal Information
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <span className="text-slate-400 block">Full Name:</span>
+                      <span className="font-semibold text-slate-900 dark:text-slate-100">{member.fullName}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block">Phone Number:</span>
+                      <span className="font-semibold text-slate-900 dark:text-slate-100">{member.phone}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block">Room Number:</span>
+                      <span className="font-semibold text-slate-900 dark:text-slate-100">{member.roomNumber || 'Not specified'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block">Account Status:</span>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${
+                        member.isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
+                      }`}>
+                        {member.isActive ? 'Active Member' : 'Deactivated'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block">Joining Date:</span>
+                      <span className="font-medium text-slate-800 dark:text-slate-200">{formatDate(member.joinedAt)}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block">Role:</span>
+                      <span className="font-semibold text-slate-900 dark:text-slate-100">
+                        {member.isPrimaryAdmin ? 'Primary Admin' : member.isManager ? 'Manager' : member.isAdmin ? 'Admin' : 'General Member'}
+                      </span>
+                    </div>
+                  </div>
+                  {member.bio && (
+                    <div className="pt-2 border-t border-slate-200 dark:border-slate-700/50 text-xs">
+                      <span className="text-slate-400 block mb-0.5">Bio:</span>
+                      <p className="text-slate-700 dark:text-slate-300 italic">{member.bio}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bazar Date Range Schedule Summary */}
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <ShoppingCart className="w-4 h-4 text-orange-500" />
+                      Assigned Bazar Date Ranges
+                    </h4>
+                    <span className="text-xs text-orange-600 dark:text-orange-400 font-semibold">
+                      {bazarSchedules?.all.length || 0} scheduled
+                    </span>
+                  </div>
+
+                  {bazarSchedules?.current && bazarSchedules.current.length > 0 && (
+                    <div className="p-2.5 rounded-lg bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800/50">
+                      <span className="text-[11px] font-bold text-orange-800 dark:text-orange-300 uppercase tracking-wider block">
+                        Ongoing Today (চলমান বাজার):
+                      </span>
+                      {bazarSchedules.current.map((s) => (
+                        <div key={s.id} className="text-xs font-bold text-orange-950 dark:text-orange-200 mt-0.5">
+                          {s.formattedRange} {s.notes && <span className="font-normal text-[11px]">({s.notes})</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div>
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                      Upcoming Bazar Dates:
+                    </span>
+                    {bazarSchedules?.upcoming && bazarSchedules.upcoming.length > 0 ? (
+                      <div className="space-y-1">
+                        {bazarSchedules.upcoming.map((s) => (
+                          <div key={s.id} className="flex items-center justify-between text-xs py-1 px-2 rounded bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800">
+                            <span className="font-medium text-slate-800 dark:text-slate-200">{s.formattedRange}</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400">
+                              Upcoming
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">No upcoming bazar dates assigned.</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                      Completed Bazar History:
+                    </span>
+                    {bazarSchedules?.completed && bazarSchedules.completed.length > 0 ? (
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {bazarSchedules.completed.map((s) => (
+                          <div key={s.id} className="flex items-center justify-between text-xs py-1 px-2 rounded bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800">
+                            <span className="text-slate-600 dark:text-slate-400">{s.formattedRange}</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-slate-100 dark:bg-slate-800 text-slate-500">
+                              Completed
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">No previous bazar dates.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial Snapshot */}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
+                  Comprehensive Financial Snapshot
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <span className="text-slate-400 text-[11px] block">Initial Opening Balance</span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-1 block">
+                      {formatCurrency(member.initialOpeningBalance || 0)}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <span className="text-slate-400 text-[11px] block">Total Member Deposits</span>
+                    <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400 mt-1 block">
+                      {formatCurrency(accounting.deposits)}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <span className="text-slate-400 text-[11px] block">Total Meals &amp; Meal Cost</span>
+                    <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1 block">
+                      {accounting.totalMeals} meals ({formatCurrency(accounting.mealCost)})
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <span className="text-slate-400 text-[11px] block">Total Additional Expenses</span>
+                    <span className="text-sm font-bold text-amber-600 dark:text-amber-400 mt-1 block">
+                      {formatCurrency(accounting.sharedExpenseCost + accounting.individualExpenseCost)}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <span className="text-slate-400 text-[11px] block">Total Fine Charged</span>
+                    <span className="text-sm font-bold text-rose-600 dark:text-rose-400 mt-1 block">
+                      {formatCurrency(fines?.totalFineAmount || 0)}
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      Paid: {formatCurrency(fines?.paidFineAmount || 0)} | Due: {formatCurrency(fines?.unpaidFineAmount || 0)}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <span className="text-slate-400 text-[11px] block">Bazar Personal Payments</span>
+                    <span className="text-sm font-bold text-sky-600 dark:text-sky-400 mt-1 block">
+                      {formatCurrency(accounting.bazarContribution)}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 col-span-2">
+                    <span className="text-slate-400 text-[11px] block">Current Due or Advance Settlement</span>
+                    <span className={`text-base font-extrabold mt-1 block ${
+                      accounting.dueAmount > 0
+                        ? 'text-rose-600 dark:text-rose-400'
+                        : accounting.advanceAmount > 0
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-slate-700 dark:text-slate-300'
+                    }`}>
+                      {accounting.dueAmount > 0
+                        ? `Net Due: ৳${accounting.dueAmount.toFixed(2)} (বাকি)`
+                        : accounting.advanceAmount > 0
+                        ? `Net Advance: ৳${accounting.advanceAmount.toFixed(2)} (পাওনা)`
+                        : 'Settled (৳0.00)'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* TAB 1: MEALS */}
           {activeTab === 'meals' && (
             <div className="overflow-x-auto">
@@ -729,37 +968,94 @@ export function MemberProfileClient({
 
           {/* TAB 3: BAZAR */}
           {activeTab === 'bazar' && (
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
-                  <tr>
-                    <th className="py-2.5 px-3">Date</th>
-                    <th className="py-2.5 px-3">Items / Title</th>
-                    <th className="py-2.5 px-3 text-right">Amount Paid</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {recentBazar.length === 0 ? (
-                    <tr>
-                      <td colSpan={3} className="py-6 text-center text-slate-400">
-                        No bazar purchases paid by this member.
-                      </td>
-                    </tr>
-                  ) : (
-                    recentBazar.map((b) => (
-                      <tr key={b.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                        <td className="py-2.5 px-3 font-medium text-slate-800 dark:text-slate-200">
-                          {formatDate(b.date)}
-                        </td>
-                        <td className="py-2.5 px-3 text-slate-700 dark:text-slate-300">{b.title}</td>
-                        <td className="py-2.5 px-3 text-right font-bold text-sky-600 dark:text-sky-400">
-                          {formatCurrency(b.amount)}
-                        </td>
+            <div className="space-y-6">
+              {/* 1. Assigned Date-Range Bazar Schedule */}
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-orange-500" />
+                  Assigned Bazar Date Ranges ({bazarSchedules?.all.length || 0})
+                </h4>
+                <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+                      <tr>
+                        <th className="py-2.5 px-3">Date Range</th>
+                        <th className="py-2.5 px-3">Schedule Status</th>
+                        <th className="py-2.5 px-3">Notes</th>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {!bazarSchedules || bazarSchedules.all.length === 0 ? (
+                        <tr>
+                          <td colSpan={3} className="py-6 text-center text-slate-400">
+                            No bazar date ranges assigned to this member.
+                          </td>
+                        </tr>
+                      ) : (
+                        bazarSchedules.all.map((s) => (
+                          <tr key={s.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                            <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-slate-100">
+                              {s.formattedRange}
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                                s.status === 'ONGOING'
+                                  ? 'bg-orange-100 dark:bg-orange-950/70 text-orange-800 dark:text-orange-300 border border-orange-300 dark:border-orange-700 animate-pulse'
+                                  : s.status === 'UPCOMING'
+                                  ? 'bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300'
+                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                              }`}>
+                                {s.status === 'ONGOING' ? 'Ongoing Today (চলমান)' : s.status === 'UPCOMING' ? 'Upcoming' : 'Completed'}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-500">{s.notes || '—'}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* 2. Actual Bazar Expense Purchases */}
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
+                  <ShoppingCart className="w-4 h-4 text-emerald-500" />
+                  Actual Bazar Purchases Paid by Member ({recentBazar.length})
+                </h4>
+                <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+                      <tr>
+                        <th className="py-2.5 px-3">Date</th>
+                        <th className="py-2.5 px-3">Items / Title</th>
+                        <th className="py-2.5 px-3 text-right">Amount Paid</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {recentBazar.length === 0 ? (
+                        <tr>
+                          <td colSpan={3} className="py-6 text-center text-slate-400">
+                            No bazar purchases paid by this member.
+                          </td>
+                        </tr>
+                      ) : (
+                        recentBazar.map((b) => (
+                          <tr key={b.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                            <td className="py-2.5 px-3 font-medium text-slate-800 dark:text-slate-200">
+                              {formatDate(b.date)}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-700 dark:text-slate-300">{b.title}</td>
+                            <td className="py-2.5 px-3 text-right font-bold text-sky-600 dark:text-sky-400">
+                              {formatCurrency(b.amount)}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
 
@@ -800,6 +1096,81 @@ export function MemberProfileClient({
               </table>
             </div>
           )}
+
+          {/* TAB 5: FINES */}
+          {activeTab === 'fines' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+                  <span className="text-[11px] text-slate-400 block">Total Fine</span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5 block">
+                    {formatCurrency(fines?.totalFineAmount || 0)}
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/50">
+                  <span className="text-[11px] text-emerald-700 dark:text-emerald-300 block">Total Fine Paid</span>
+                  <span className="text-sm font-bold text-emerald-800 dark:text-emerald-200 mt-0.5 block">
+                    {formatCurrency(fines?.paidFineAmount || 0)}
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl bg-rose-50/60 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/50">
+                  <span className="text-[11px] text-rose-700 dark:text-rose-300 block">Outstanding Fine (Due)</span>
+                  <span className="text-sm font-bold text-rose-800 dark:text-rose-200 mt-0.5 block">
+                    {formatCurrency(fines?.unpaidFineAmount || 0)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+                    <tr>
+                      <th className="py-2.5 px-3">Date</th>
+                      <th className="py-2.5 px-3">Reason</th>
+                      <th className="py-2.5 px-3">Status</th>
+                      <th className="py-2.5 px-3">Payment Method</th>
+                      <th className="py-2.5 px-3">Notes</th>
+                      <th className="py-2.5 px-3 text-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {!fines || fines.list.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-6 text-center text-slate-400">
+                          No fine records recorded for this member.
+                        </td>
+                      </tr>
+                    ) : (
+                      fines.list.map((f) => (
+                        <tr key={f.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                          <td className="py-2.5 px-3 font-medium text-slate-800 dark:text-slate-200">
+                            {formatDate(f.fineDate)}
+                          </td>
+                          <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-slate-100">
+                            {f.reason}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                              f.isPaid
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                                : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
+                            }`}>
+                              {f.isPaid ? 'PAID' : 'UNPAID'}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-500">{f.isPaid ? (f.paymentMethod || 'CASH') : '—'}</td>
+                          <td className="py-2.5 px-3 text-slate-500">{f.notes || '—'}</td>
+                          <td className="py-2.5 px-3 text-right font-bold text-rose-600 dark:text-rose-400">
+                            {formatCurrency(f.amount)}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -822,6 +1193,7 @@ export function MemberProfileClient({
             </p>
 
             <form onSubmit={handleEditSubmit} className="space-y-4">
+              {/* Name & Phone: Editable only by Admin/Manager */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {t.profile?.name || 'Full Name'} *
@@ -830,9 +1202,13 @@ export function MemberProfileClient({
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
+                  disabled={!member.isPrimaryAdmin && !member.isAdmin && !member.isManager}
                   required
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-900 dark:text-slate-100 focus:outline-emerald-500"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-900 dark:text-slate-100 focus:outline-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
+                {!member.isPrimaryAdmin && !member.isAdmin && !member.isManager && (
+                  <p className="text-[10px] text-slate-400 mt-0.5">General members can only update their Profile Picture.</p>
+                )}
               </div>
 
               <div>
@@ -843,8 +1219,9 @@ export function MemberProfileClient({
                   type="text"
                   value={editPhone}
                   onChange={(e) => setEditPhone(e.target.value)}
+                  disabled={!member.isPrimaryAdmin && !member.isAdmin && !member.isManager}
                   required
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-900 dark:text-slate-100 focus:outline-emerald-500"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-900 dark:text-slate-100 focus:outline-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
 

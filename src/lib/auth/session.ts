@@ -225,6 +225,19 @@ export async function requireManager(): Promise<AuthSession> {
 }
 
 /**
+ * Enforces Admin authority (Primary Admin or Admin).
+ * Restricted from Manager and General Members.
+ */
+export async function requireAdmin(): Promise<AuthSession> {
+  const session = await requireAuth();
+  const isAdmin = session.isPrimaryAdmin || session.isAdmin;
+  if (!isAdmin) {
+    throw new Error('Access Denied: This operation is restricted exclusively to Admin.');
+  }
+  return session;
+}
+
+/**
  * Enforces Permanent Primary Admin authority (Mohammad Tarek Hossen).
  */
 export async function requirePrimaryAdmin(): Promise<AuthSession> {

@@ -145,6 +145,7 @@ export function MemberManagementClient({
   const currentManager = members.find((m) => m.isManager);
   const primaryAdmin = members.find((m) => m.isPrimaryAdmin);
   const sharedAdmins = members.filter((m) => m.isAdmin && !m.isPrimaryAdmin);
+  const canAdminMembers = currentUser.isPrimaryAdmin || currentUser.isAdmin;
 
   // Counts
   const totalCount = members.length;
@@ -424,13 +425,15 @@ export function MemberManagementClient({
             </Button>
           )}
 
-          <Button
-            onClick={openAddModal}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs flex items-center gap-1.5 shadow-xs"
-          >
-            <UserPlus className="w-3.5 h-3.5" />
-            <span>Add Member</span>
-          </Button>
+          {canAdminMembers && (
+            <Button
+              onClick={openAddModal}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs flex items-center gap-1.5 shadow-xs"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Add Member</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -575,19 +578,20 @@ export function MemberManagementClient({
                       {/* Name & Role Indicators */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <span
-                            className={`font-semibold ${
+                          <Link
+                            href={`/members/${m.id}`}
+                            className={`font-semibold hover:underline flex items-center gap-1.5 ${
                               m.isPrimaryAdmin
                                 ? 'text-amber-950 dark:text-amber-300 font-bold'
                                 : m.isManager
                                 ? 'text-emerald-950 dark:text-emerald-300 font-bold'
                                 : isArchived
                                 ? 'line-through text-slate-400 dark:text-slate-500'
-                                : 'text-slate-900 dark:text-slate-100'
+                                : 'text-slate-900 dark:text-slate-100 hover:text-orange-600 dark:hover:text-orange-400'
                             }`}
                           >
                             {m.fullName}
-                          </span>
+                          </Link>
                           {m.isPrimaryAdmin && (
                             <span title="Permanent Primary Admin">
                               <Crown className="w-4 h-4 text-amber-500 fill-amber-400" />
@@ -652,6 +656,15 @@ export function MemberManagementClient({
                       {/* Actions */}
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* Profile Link */}
+                          <Link
+                            href={`/members/${m.id}`}
+                            title="View Member Profile"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <User className="w-4 h-4" />
+                          </Link>
+
                           {/* Ledger button */}
                           <Link
                             href={`/my-ledger?memberId=${m.id}`}
@@ -688,8 +701,8 @@ export function MemberManagementClient({
                             </button>
                           )}
 
-                          {/* Deactivate / Reactivate */}
-                          {!m.isPrimaryAdmin && !m.isArchived && (
+                          {/* Deactivate / Reactivate (Admin Only) */}
+                          {canAdminMembers && !m.isPrimaryAdmin && !m.isArchived && (
                             <>
                               {m.isActive ? (
                                 <button
@@ -712,8 +725,8 @@ export function MemberManagementClient({
                             </>
                           )}
 
-                          {/* Archive (Soft delete) */}
-                          {!m.isPrimaryAdmin && !m.isArchived && (
+                          {/* Archive (Soft delete, Admin Only) */}
+                          {canAdminMembers && !m.isPrimaryAdmin && !m.isArchived && (
                             <button
                               onClick={() => setArchiveModalMember(m)}
                               title="Archive Member (Soft delete, historical transactions 100% preserved)"

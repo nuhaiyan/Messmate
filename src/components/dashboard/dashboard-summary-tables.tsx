@@ -10,7 +10,7 @@ import {
   ArrowDownRight,
   TrendingUp,
   Megaphone,
-  MessageSquare,
+  Calendar,
   ArrowRight,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -66,12 +66,14 @@ export interface SummaryNoticeItem {
   publishedAt: string;
 }
 
-export interface SummaryMessageItem {
+export interface SummaryBazarScheduleItem {
   id: string;
-  senderName: string;
-  senderInitial: string;
-  content: string;
-  createdAt: string;
+  memberName: string;
+  memberPhone?: string | null;
+  startDate: string;
+  endDate: string;
+  formattedRange: string;
+  status: 'UPCOMING' | 'ONGOING' | 'COMPLETED';
 }
 
 interface DashboardSummaryTablesProps {
@@ -82,7 +84,7 @@ interface DashboardSummaryTablesProps {
   recentDeposits: SummaryDepositItem[];
   recentActivities: SummaryActivityItem[];
   recentNotices: SummaryNoticeItem[];
-  recentMessages: SummaryMessageItem[];
+  upcomingBazarSchedules?: SummaryBazarScheduleItem[];
 }
 
 export function DashboardSummaryTables({
@@ -93,7 +95,7 @@ export function DashboardSummaryTables({
   recentDeposits,
   recentActivities,
   recentNotices,
-  recentMessages,
+  upcomingBazarSchedules = [],
 }: DashboardSummaryTablesProps) {
   const { language } = useI18n();
 
@@ -163,58 +165,72 @@ export function DashboardSummaryTables({
           </CardContent>
         </Card>
 
-        {/* Live Community Room & Messages Preview */}
+        {/* Upcoming Bazar Schedule */}
         <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] bg-white dark:bg-slate-900 transition-all hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
               <CardTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-orange-500" />
-                {language === 'bn' ? 'কমিউনিটি রুম ও বার্তা' : 'Community Room'}
+                <Calendar className="w-4 h-4 text-orange-500" />
+                {language === 'bn' ? 'আসন্ন বাজার শিডিউল' : 'Upcoming Bazar Schedule'}
               </CardTitle>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 {language === 'bn'
-                  ? 'রুমমেটদের সাথে রিয়েল-টাইম আলোচনা'
-                  : 'Real-time discussions and roommate coordination'}
+                  ? 'এশিয়া/ঢাকা টাইমজোনে দায়িত্বপ্রাপ্ত সদস্যবৃন্দ'
+                  : 'Responsible members by date range (Asia/Dhaka)'}
               </p>
             </div>
             <Link
-              href="/messages"
+              href="/bazar"
               className="text-xs font-semibold text-orange-600 dark:text-orange-400 hover:text-orange-700 flex items-center gap-1 cursor-pointer"
             >
-              <span>{language === 'bn' ? 'চ্যাট খুলুন' : 'Open Chat'}</span>
+              <span>{language === 'bn' ? 'সম্পূর্ণ শিডিউল' : 'Full Schedule'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recentMessages.length === 0 ? (
+              {upcomingBazarSchedules.length === 0 ? (
                 <p className="text-xs text-slate-400 py-4 text-center">
                   {language === 'bn'
-                    ? 'কোনো বার্তা নেই। প্রথম বার্তা পাঠান!'
-                    : 'No community messages yet. Start the conversation!'}
+                    ? 'কোনো বাজার শিডিউল তৈরি করা হয়নি।'
+                    : 'No upcoming bazar schedules assigned.'}
                 </p>
               ) : (
-                recentMessages.map((msg) => (
+                upcomingBazarSchedules.map((sched) => (
                   <div
-                    key={msg.id}
-                    className="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 flex items-center justify-between gap-3"
+                    key={sched.id}
+                    className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 ${
+                      sched.status === 'ONGOING'
+                        ? 'bg-amber-500/10 border-amber-300 dark:border-amber-700/60 text-amber-900 dark:text-amber-100'
+                        : sched.status === 'UPCOMING'
+                        ? 'bg-blue-50/60 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/40 text-slate-800 dark:text-slate-200'
+                        : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-100 dark:border-slate-800 text-slate-500'
+                    }`}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 font-bold text-xs flex items-center justify-center shrink-0">
-                        {msg.senderInitial}
-                      </div>
-                      <div className="min-w-0">
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">
-                          {msg.senderName}
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold truncate">{sched.memberName}</span>
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md uppercase ${
+                            sched.status === 'ONGOING'
+                              ? 'bg-amber-500 text-white'
+                              : sched.status === 'UPCOMING'
+                              ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                              : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
+                          }`}
+                        >
+                          {sched.status}
                         </span>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                          {msg.content}
-                        </p>
                       </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {sched.formattedRange}
+                      </p>
                     </div>
-                    <span className="text-[10px] text-slate-400 shrink-0">
-                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+                    {sched.memberPhone && (
+                      <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 shrink-0">
+                        {sched.memberPhone}
+                      </span>
+                    )}
                   </div>
                 ))
               )}

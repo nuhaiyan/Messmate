@@ -9,9 +9,9 @@ import { History } from 'lucide-react';
 export default async function ActivitiesPage() {
   const session = await requireAuth();
 
-  // Protect Admin/Manager panel: audit logs restricted to management
-  if (!session.isPrimaryAdmin && !session.isAdmin && !session.isManager) {
-    redirect('/my-ledger');
+  // Activity Logs restricted exclusively to Primary Admin and Admin (Manager and Members cannot access)
+  if (!session.isPrimaryAdmin && !session.isAdmin) {
+    redirect('/dashboard');
   }
 
   const allMembers = await prisma.messMember.findMany({
