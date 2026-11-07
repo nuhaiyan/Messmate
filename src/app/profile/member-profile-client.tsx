@@ -177,7 +177,7 @@ export function MemberProfileClient({
   const { t } = useI18n();
   const [member, setMember] = useState(initialMember);
   const [meals, setMeals] = useState(initialMeals);
-  const [activeTab, setActiveTab] = useState<'overview' | 'meals' | 'deposits' | 'bazar' | 'expenses' | 'fines'>('overview');
+  const [activeTab, setActiveTab] = useState<'meals' | 'deposits' | 'bazar' | 'expenses' | 'fines'>('meals');
 
   // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -696,7 +696,7 @@ export function MemberProfileClient({
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-emerald-600" />
-                <span>আর্থিক ও মিল সারসংক্ষেপ (9 Financial & Activity Overview Cards)</span>
+                <span>আর্থিক ও মিল সারসংক্ষেপ</span>
               </h2>
               <span className="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">
                 বর্তমান মিল রেট: <strong className="text-emerald-600 font-bold">৳{accounting.currentMealRate.toFixed(2)}</strong> / মিল
@@ -708,7 +708,7 @@ export function MemberProfileClient({
               <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-emerald-500/50 transition-colors">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    1. Total Joma (মোট জমা)
+                    মোট জমা (Total Deposit)
                   </span>
                   <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
                     <Wallet className="w-3.5 h-3.5" />
@@ -726,7 +726,7 @@ export function MemberProfileClient({
               <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-sky-500/50 transition-colors">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    2. Initial Balance (প্রারম্ভিক ব্যালেন্স)
+                    প্রারম্ভিক ব্যালেন্স (Opening Balance)
                   </span>
                   <div className="w-7 h-7 rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-600 flex items-center justify-center">
                     <Coins className="w-3.5 h-3.5" />
@@ -736,7 +736,7 @@ export function MemberProfileClient({
                   {formatCurrency(initialBalanceValue)}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  সিস্টেমে অন্তর্ভুক্ত পূর্ববর্তী জমার স্থিতি
+                  পূর্ববর্তী স্থিতি
                 </p>
               </div>
 
@@ -744,7 +744,7 @@ export function MemberProfileClient({
               <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-amber-500/50 transition-colors">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    3. Total Meals (মোট মিল)
+                    মোট মিল (Total Meals)
                   </span>
                   <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center">
                     <Utensils className="w-3.5 h-3.5" />
@@ -764,7 +764,7 @@ export function MemberProfileClient({
               <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-teal-500/50 transition-colors">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    4. Today's Meals (আজকের মিল)
+                    আজকের মিল (Today&apos;s Meals)
                   </span>
                   <div className="w-7 h-7 rounded-lg bg-teal-100 dark:bg-teal-950/60 text-teal-600 flex items-center justify-center">
                     <Clock className="w-3.5 h-3.5" />
@@ -774,7 +774,7 @@ export function MemberProfileClient({
                   {todayMealsCount} <span className="text-sm font-semibold text-slate-500">টি</span>
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  আজকের সক্রিয় মিল কাউন্ট (Dhaka Timezone)
+                  আজকের সক্রিয় মিল
                 </p>
               </div>
 
@@ -782,7 +782,7 @@ export function MemberProfileClient({
               <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-rose-500/50 transition-colors">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    5. Total Cost (মোট খরচ)
+                    মোট খরচ (Total Cost)
                   </span>
                   <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center">
                     <Receipt className="w-3.5 h-3.5" />
@@ -792,7 +792,7 @@ export function MemberProfileClient({
                   {formatCurrency(totalCostValue)}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  মিল খরচ: ৳{accounting.mealCost.toFixed(0)} | অতিরিক্ত: ৳{(accounting.sharedExpenseCost + accounting.individualExpenseCost).toFixed(0)}
+                  মিল: ৳{accounting.mealCost.toFixed(0)} | অতিরিক্ত: ৳{(accounting.sharedExpenseCost + accounting.individualExpenseCost).toFixed(0)}
                 </p>
               </div>
 
@@ -800,7 +800,7 @@ export function MemberProfileClient({
               <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-orange-500/50 transition-colors">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    6. Bazar Date Range (বাজার শিডিউল)
+                    বাজার শিডিউল (Bazar Schedule)
                   </span>
                   <div className="w-7 h-7 rounded-lg bg-orange-100 dark:bg-orange-950/60 text-orange-600 flex items-center justify-center">
                     <ShoppingCart className="w-3.5 h-3.5" />
@@ -827,7 +827,7 @@ export function MemberProfileClient({
               <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-purple-500/50 transition-colors">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    7. Total Fine (মোট জরিমানা)
+                    মোট জরিমানা (Fine Status)
                   </span>
                   <div className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center">
                     <AlertCircle className="w-3.5 h-3.5" />
@@ -845,7 +845,7 @@ export function MemberProfileClient({
               <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-indigo-500/50 transition-colors">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    8. Monthly Balance (চলতি মাস)
+                    চলতি মাস (Monthly Balance)
                   </span>
                   <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 flex items-center justify-center">
                     <Calendar className="w-3.5 h-3.5" />
@@ -855,7 +855,7 @@ export function MemberProfileClient({
                   {monthlyBalanceValue >= 0 ? '+' : ''}{formatCurrency(monthlyBalanceValue)}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  চলতি মাসের জমা থেকে খরচের পার্থক্য ({monthlyBalanceValue >= 0 ? 'উদ্বৃত্ত/Surplus' : 'ঘাটতি/Deficit'})
+                  জমা ও খরচের পার্থক্য ({monthlyBalanceValue >= 0 ? 'উদ্বৃত্ত/Surplus' : 'ঘাটতি/Deficit'})
                 </p>
               </div>
 
@@ -867,7 +867,7 @@ export function MemberProfileClient({
               }`}>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                    9. Overall Balance (সর্বমোট স্থিতি)
+                    সর্বমোট স্থিতি (Net Balance)
                   </span>
                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
                     overallBalanceValue >= 0
@@ -894,16 +894,6 @@ export function MemberProfileClient({
       {/* Interactive Tabs for Historical Records */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
         <div className="flex border-b border-slate-200 dark:border-slate-800 px-4 pt-3 gap-2 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
-              activeTab === 'overview'
-                ? 'border-orange-500 text-orange-600 dark:text-orange-400'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
-          >
-            Overview
-          </button>
           <button
             onClick={() => setActiveTab('meals')}
             className={`px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
@@ -957,189 +947,6 @@ export function MemberProfileClient({
         </div>
 
         <div className="p-4">
-          {/* TAB 0: OVERVIEW */}
-          {activeTab === 'overview' && (
-            <div className="space-y-6">
-              {/* Personal Details & Financial Overview Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Personal Information */}
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    Personal Information
-                  </h4>
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <span className="text-slate-400 block">Full Name:</span>
-                      <span className="font-semibold text-slate-900 dark:text-slate-100">{member.fullName}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block">Phone Number:</span>
-                      <span className="font-semibold text-slate-900 dark:text-slate-100">{member.phone}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block">Room Number:</span>
-                      <span className="font-semibold text-slate-900 dark:text-slate-100">{member.roomNumber || 'Not specified'}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block">Account Status:</span>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${
-                        member.isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
-                      }`}>
-                        {member.isActive ? 'Active Member' : 'Deactivated'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block">Joining Date:</span>
-                      <span className="font-medium text-slate-800 dark:text-slate-200">{formatDate(member.joinedAt)}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block">Role:</span>
-                      <span className="font-semibold text-slate-900 dark:text-slate-100">
-                        {member.isPrimaryAdmin ? 'Primary Admin' : member.isManager ? 'Manager' : member.isAdmin ? 'Admin' : 'General Member'}
-                      </span>
-                    </div>
-                  </div>
-                  {member.bio && (
-                    <div className="pt-2 border-t border-slate-200 dark:border-slate-700/50 text-xs">
-                      <span className="text-slate-400 block mb-0.5">Bio:</span>
-                      <p className="text-slate-700 dark:text-slate-300 italic">{member.bio}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Bazar Date Range Schedule Summary */}
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                      <ShoppingCart className="w-4 h-4 text-orange-500" />
-                      Assigned Bazar Date Ranges
-                    </h4>
-                    <span className="text-xs text-orange-600 dark:text-orange-400 font-semibold">
-                      {bazarSchedules?.all.length || 0} scheduled
-                    </span>
-                  </div>
-
-                  {bazarSchedules?.current && bazarSchedules.current.length > 0 && (
-                    <div className="p-2.5 rounded-lg bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800/50">
-                      <span className="text-[11px] font-bold text-orange-800 dark:text-orange-300 uppercase tracking-wider block">
-                        Ongoing Today (চলমান বাজার):
-                      </span>
-                      {bazarSchedules.current.map((s) => (
-                        <div key={s.id} className="text-xs font-bold text-orange-950 dark:text-orange-200 mt-0.5">
-                          {s.formattedRange} {s.notes && <span className="font-normal text-[11px]">({s.notes})</span>}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div>
-                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-                      Upcoming Bazar Dates:
-                    </span>
-                    {bazarSchedules?.upcoming && bazarSchedules.upcoming.length > 0 ? (
-                      <div className="space-y-1">
-                        {bazarSchedules.upcoming.map((s) => (
-                          <div key={s.id} className="flex items-center justify-between text-xs py-1 px-2 rounded bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800">
-                            <span className="font-medium text-slate-800 dark:text-slate-200">{s.formattedRange}</span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400">
-                              Upcoming
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-slate-400 italic">No upcoming bazar dates assigned.</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-                      Completed Bazar History:
-                    </span>
-                    {bazarSchedules?.completed && bazarSchedules.completed.length > 0 ? (
-                      <div className="space-y-1 max-h-32 overflow-y-auto">
-                        {bazarSchedules.completed.map((s) => (
-                          <div key={s.id} className="flex items-center justify-between text-xs py-1 px-2 rounded bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800">
-                            <span className="text-slate-600 dark:text-slate-400">{s.formattedRange}</span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-slate-100 dark:bg-slate-800 text-slate-500">
-                              Completed
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-slate-400 italic">No previous bazar dates.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Financial Snapshot */}
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
-                  Comprehensive Financial Snapshot
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                  <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                    <span className="text-slate-400 text-[11px] block">Initial Opening Balance</span>
-                    <span className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-1 block">
-                      {formatCurrency(member.initialOpeningBalance || 0)}
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                    <span className="text-slate-400 text-[11px] block">Total Member Deposits</span>
-                    <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400 mt-1 block">
-                      {formatCurrency(accounting.deposits)}
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                    <span className="text-slate-400 text-[11px] block">Total Meals &amp; Meal Cost</span>
-                    <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1 block">
-                      {accounting.totalMeals} meals ({formatCurrency(accounting.mealCost)})
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                    <span className="text-slate-400 text-[11px] block">Total Additional Expenses</span>
-                    <span className="text-sm font-bold text-amber-600 dark:text-amber-400 mt-1 block">
-                      {formatCurrency(accounting.sharedExpenseCost + accounting.individualExpenseCost)}
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                    <span className="text-slate-400 text-[11px] block">Total Fine Charged</span>
-                    <span className="text-sm font-bold text-rose-600 dark:text-rose-400 mt-1 block">
-                      {formatCurrency(fines?.totalFineAmount || 0)}
-                    </span>
-                    <span className="text-[10px] text-slate-500">
-                      Paid: {formatCurrency(fines?.paidFineAmount || 0)} | Due: {formatCurrency(fines?.unpaidFineAmount || 0)}
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                    <span className="text-slate-400 text-[11px] block">Bazar Personal Payments</span>
-                    <span className="text-sm font-bold text-sky-600 dark:text-sky-400 mt-1 block">
-                      {formatCurrency(accounting.bazarContribution)}
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 col-span-2">
-                    <span className="text-slate-400 text-[11px] block">Current Due or Advance Settlement</span>
-                    <span className={`text-base font-extrabold mt-1 block ${
-                      accounting.dueAmount > 0
-                        ? 'text-rose-600 dark:text-rose-400'
-                        : accounting.advanceAmount > 0
-                        ? 'text-emerald-600 dark:text-emerald-400'
-                        : 'text-slate-700 dark:text-slate-300'
-                    }`}>
-                      {accounting.dueAmount > 0
-                        ? `Net Due: ৳${accounting.dueAmount.toFixed(2)} (বাকি)`
-                        : accounting.advanceAmount > 0
-                        ? `Net Advance: ৳${accounting.advanceAmount.toFixed(2)} (পাওনা)`
-                        : 'Settled (৳0.00)'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* TAB 1: MEALS */}
           {activeTab === 'meals' && (
             <div className="overflow-x-auto">
