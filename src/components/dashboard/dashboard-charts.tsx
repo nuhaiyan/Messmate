@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -36,11 +36,25 @@ export function DashboardCharts({
   depositVsExpense,
 }: DashboardChartsProps) {
   const { language, t } = useI18n();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const expenseBreakdown = [
     { name: language === 'bn' ? 'বাজার খরচ' : 'Bazar Expenses', value: depositVsExpense.bazar, color: '#f97316' },
     { name: language === 'bn' ? 'ইউটিলিটি ও অন্যান্য' : 'Fixed / Utilities', value: depositVsExpense.additional, color: '#38bdf8' },
   ];
+
+  if (!isMounted) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 my-6">
+        <div className="h-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 animate-pulse" />
+        <div className="h-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 animate-pulse" />
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 my-6">

@@ -104,7 +104,7 @@ export function DashboardShell({
             isManager={isManager}
           />
 
-          <main className="flex-1 p-3.5 sm:p-5 md:p-8 max-w-7xl w-full mx-auto min-w-0 pb-8">
+          <main className="flex-1 p-3 sm:p-5 md:p-8 max-w-7xl w-full mx-auto min-w-0 pb-12">
             {children}
           </main>
         </div>

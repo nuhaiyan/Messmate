@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import {
@@ -14,7 +14,6 @@ import {
   Sun,
   Moon,
   LayoutDashboard,
-  Users,
   Utensils,
   ShoppingCart,
   Wallet,
@@ -23,12 +22,14 @@ import {
   BarChart3,
   Settings,
   Search,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/context';
 import { PhoneNotificationButton } from '@/components/notifications/phone-notification-button';
 import { useTheme } from '@/lib/theme/context';
 import { logoutAction } from '@/app/actions/auth';
-import { MemberNavigationDropdown, INITIAL_14_MEMBERS } from '@/components/navigation/member-navigation-dropdown';
+import { INITIAL_14_MEMBERS } from '@/components/navigation/member-navigation-dropdown';
 import { GlobalSearchDialog } from '@/components/navigation/global-search-dialog';
 import { QuickActionsMenu } from '@/components/navigation/quick-actions-menu';
 
@@ -88,10 +89,10 @@ export function Header({
   };
 
   const monthOptions = [
-    { label: 'November 2026', value: '2026-11' },
-    { label: 'October 2026 (Closed)', value: '2026-10' },
-    { label: 'September 2026', value: '2026-09' },
-    { label: 'August 2026', value: '2026-08' },
+    { label: language === 'bn' ? 'নভেম্বর ২০২৬' : 'November 2026', value: '2026-11' },
+    { label: language === 'bn' ? 'অক্টোবর ২০২৬ (বন্ধ)' : 'October 2026 (Closed)', value: '2026-10' },
+    { label: language === 'bn' ? 'সেপ্টেম্বর ২০২৬' : 'September 2026', value: '2026-09' },
+    { label: language === 'bn' ? 'আগস্ট ২০২৬' : 'August 2026', value: '2026-08' },
   ];
 
   const currentSelection = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
@@ -101,7 +102,7 @@ export function Header({
   const hasManagerAccess = isPrimaryAdmin || isAdmin || isManager;
   const isStrictAdmin = isPrimaryAdmin || isAdmin;
 
-  // 9 Modules Navigation Definition for Top Navigation
+  // Top Navigation Bar Modules (Members option removed as requested)
   const navModules = [
     {
       id: 'dashboard',
@@ -109,14 +110,6 @@ export function Header({
       href: '/dashboard',
       icon: LayoutDashboard,
       show: true,
-    },
-    {
-      id: 'members',
-      name: language === 'bn' ? 'সদস্যবৃন্দ' : 'Members',
-      href: '/members',
-      icon: Users,
-      show: true, // Visible to all 14 members! General members see directory and open own profile.
-      isDropdown: true,
     },
     {
       id: 'meals',
@@ -169,6 +162,42 @@ export function Header({
     },
   ];
 
+  const navScrollRef = useRef<HTMLDivElement>(null);
+  const activeItemRef = useRef<HTMLAnchorElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = () => {
+    if (!navScrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = navScrollRef.current;
+    setCanScrollLeft(scrollLeft > 6);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 6);
+  };
+
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, []);
+
+  useEffect(() => {
+    if (activeItemRef.current && navScrollRef.current) {
+      activeItemRef.current.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest',
+      });
+    }
+    const timer = setTimeout(checkScroll, 200);
+    return () => clearTimeout(timer);
+  }, [pathname]);
+
+  const scrollNav = (direction: 'left' | 'right') => {
+    if (!navScrollRef.current) return;
+    const offset = direction === 'left' ? -180 : 180;
+    navScrollRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+  };
+
   return (
     <div className="sticky top-0 z-40 w-full max-w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 shadow-2xs transition-colors">
       {/* 1. Main Utility Top Row */}
@@ -194,7 +223,7 @@ export function Header({
               value={currentSelection}
               onChange={handleMonthChange}
               aria-label={t.dashboard?.selectMonth || 'Select Month'}
-              className="bg-transparent font-medium text-slate-900 dark:text-slate-100 border-none outline-hidden cursor-pointer text-xs max-w-[105px] sm:max-w-none truncate"
+              className="bg-transparent font-medium text-slate-900 dark:text-slate-100 border-none outline-hidden cursor-pointer text-xs"
             >
               {monthOptions.map((opt) => (
                 <option key={opt.value} value={opt.value} className="dark:bg-slate-800 dark:text-slate-100">
@@ -205,7 +234,7 @@ export function Header({
           </div>
 
           {/* Current Manager Pill on Header */}
-          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/50 rounded-full text-xs font-medium">
+          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/50 rounded-full text-xs font-medium shrink-0">
             <Crown className="w-3.5 h-3.5 text-amber-500" />
             <span>Manager: <strong className="font-semibold">{currentManagerName}</strong></span>
           </div>
@@ -214,7 +243,7 @@ export function Header({
           <button
             onClick={() => setIsSearchOpen(true)}
             title="Global Search across Members, Bazar, Notices, and Finances (Ctrl+K)"
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-500 dark:text-slate-400 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-500 dark:text-slate-400 transition-colors cursor-pointer shrink-0"
           >
             <Search className="w-3.5 h-3.5 text-orange-500 shrink-0" />
             <span className="hidden sm:inline">Search...</span>
@@ -224,13 +253,13 @@ export function Header({
           </button>
         </div>
 
-        <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0">
           {/* Quick Actions Shortcuts Dropdown */}
           <QuickActionsMenu isManagement={hasManagerAccess} activeMemberId={activeMemberId} />
 
           {/* Meal rate pill */}
           {currentMealRate !== undefined && (
-            <div className="hidden xl:flex items-center gap-1.5 px-3 py-1 bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/50 rounded-full text-xs font-semibold">
+            <div className="hidden xl:flex items-center gap-1.5 px-3 py-1 bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/50 rounded-full text-xs font-semibold shrink-0">
               <TrendingUp className="w-3.5 h-3.5 text-orange-500" />
               <span>
                 {t.dashboard?.currentMealRate || 'Meal Rate'}: <strong className="text-orange-900 dark:text-orange-200 font-bold">৳{currentMealRate}</strong>
@@ -282,7 +311,7 @@ export function Header({
           {/* Logged in User Profile Badge */}
           <Link
             href="/profile"
-            className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 rounded-xl p-1.5 sm:px-3 sm:py-1 text-xs hover:border-orange-400 dark:hover:border-orange-500 transition-colors shrink-0"
+            className="hidden md:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 rounded-xl p-1.5 sm:px-3 sm:py-1 text-xs hover:border-orange-400 dark:hover:border-orange-500 transition-colors shrink-0"
             title="Open My Profile"
           >
             {currentActiveMember?.isPrimaryAdmin ? (
@@ -311,7 +340,7 @@ export function Header({
             }}
             disabled={isPending}
             title="Sign out of MessMate"
-            className="flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1 rounded-xl text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800/60 transition-colors cursor-pointer shrink-0"
+            className="hidden sm:flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1 rounded-xl text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800/60 transition-colors cursor-pointer shrink-0"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span className="hidden md:inline">{t.nav?.logout || 'Logout'}</span>
@@ -319,29 +348,34 @@ export function Header({
         </div>
       </header>
 
-      {/* 2. Top Navigation Bar for 9 Modules (Orange, Off-white, Soft-gray Theme, Mobile Responsive) */}
+      {/* 2. Top Navigation Bar (User Friendly, Fully Mobile & Multi-Device Responsive, Smooth Touch Scroll) */}
       <nav
         aria-label="Top Module Navigation"
-        className="w-full bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xs px-2 sm:px-4 md:px-8 py-1 sm:py-1.5 overflow-x-auto sm:overflow-visible scrollbar-none relative z-10"
+        className="relative w-full bg-slate-50/95 dark:bg-slate-900/95 border-b border-slate-200/80 dark:border-slate-800 transition-colors"
       >
-        <div className="flex items-center gap-1 sm:gap-2 min-w-max">
+        {/* Left scroll fade & button */}
+        {canScrollLeft && (
+          <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center pr-3 pl-1.5 bg-gradient-to-r from-slate-50 dark:from-slate-900 via-slate-50/90 dark:via-slate-900/90 to-transparent pointer-events-auto">
+            <button
+              type="button"
+              onClick={() => scrollNav('left')}
+              className="w-7 h-7 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-orange-600 dark:hover:text-orange-400 transition-all cursor-pointer"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Scrollable module pills */}
+        <div
+          ref={navScrollRef}
+          onScroll={checkScroll}
+          className="w-full px-2.5 sm:px-4 md:px-8 py-1.5 sm:py-2 overflow-x-auto no-scrollbar scroll-smooth overscroll-x-contain flex items-center gap-1.5 sm:gap-2 [-webkit-overflow-scrolling:touch]"
+        >
           {navModules
             .filter((m) => m.show)
             .map((item) => {
-              // If item is Members, render the Member Navigation Dropdown popover
-              if (item.isDropdown && item.id === 'members') {
-                return (
-                  <MemberNavigationDropdown
-                    key={item.id}
-                    variant="top-nav"
-                    members={effectiveMembers}
-                    activeMemberId={activeMemberId}
-                    isManagement={hasManagerAccess}
-                    isActiveRoute={pathname.startsWith('/members')}
-                  />
-                );
-              }
-
               const isActive =
                 pathname === item.href ||
                 (item.href !== '/dashboard' && pathname.startsWith(item.href));
@@ -350,19 +384,34 @@ export function Header({
               return (
                 <Link
                   key={item.id}
+                  ref={isActive ? activeItemRef : undefined}
                   href={item.href}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all select-none cursor-pointer ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-[13px] font-semibold transition-all duration-150 select-none cursor-pointer shrink-0 whitespace-nowrap active:scale-[0.98] ${
                     isActive
-                      ? 'bg-orange-500 text-white shadow-xs dark:bg-orange-600 dark:text-white'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-800/80 border border-transparent'
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold shadow-[0_2px_8px_rgba(249,115,22,0.35)] border border-orange-500/40 dark:from-orange-600 dark:to-amber-600'
+                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50/70 dark:hover:bg-slate-750 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
+                  <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400 group-hover:text-orange-500'}`} />
                   <span>{item.name}</span>
                 </Link>
               );
             })}
         </div>
+
+        {/* Right scroll fade & button */}
+        {canScrollRight && (
+          <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center pl-3 pr-1.5 bg-gradient-to-l from-slate-50 dark:from-slate-900 via-slate-50/90 dark:via-slate-900/90 to-transparent pointer-events-auto">
+            <button
+              type="button"
+              onClick={() => scrollNav('right')}
+              className="w-7 h-7 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-orange-600 dark:hover:text-orange-400 transition-all cursor-pointer"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* Global Search Dialog Modal */}
