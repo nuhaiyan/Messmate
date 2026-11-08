@@ -6,9 +6,16 @@ import { requireAuth, requireAdmin, requireManager, requirePrimaryAdmin, setActi
 import { logActivity } from '@/lib/audit/audit-logger';
 import { hashPassword } from '@/lib/auth/password';
 
-function safeRevalidate(path: string) {
+function safeRevalidate(path?: string) {
   try {
-    revalidatePath(path);
+    revalidatePath('/', 'layout');
+    if (path) revalidatePath(path);
+    revalidatePath('/dashboard');
+    revalidatePath('/members');
+    revalidatePath('/finance');
+    revalidatePath('/profile');
+    revalidatePath('/reports');
+    revalidatePath('/my-ledger');
   } catch {
     // Ignore outside request context (e.g. CLI script or testing)
   }

@@ -85,6 +85,9 @@ interface FineFundData {
 
 interface MessFundData {
   totalDeposits: number;
+  totalOpeningBalance?: number;
+  totalOpeningAdvances?: number;
+  totalOpeningDues?: number;
   totalSharedExpenses: number;
   totalIndividualExpenses: number;
   totalPersonalPayments: number;
@@ -620,7 +623,11 @@ export function FinanceManagementClient({
               <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
                 {formatCurrency(messFund.totalDeposits)}
               </p>
-              <p className="text-[11px] text-slate-500 mt-0.5">Paid by members into mess account</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                {messFund.totalOpeningAdvances && messFund.totalOpeningAdvances > 0
+                  ? `Deposits + Opening Balance (${formatCurrency(messFund.totalOpeningAdvances)})`
+                  : 'Paid by members into mess account'}
+              </p>
             </div>
 
             <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
@@ -638,7 +645,11 @@ export function FinanceManagementClient({
               <p className="text-2xl font-extrabold text-emerald-900 dark:text-emerald-200 mt-1">
                 {formatCurrency(messFund.availableMessFund)}
               </p>
-              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5">Deposits − Mess Fund Expenses</p>
+              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5">
+                {messFund.totalOpeningBalance !== undefined && messFund.totalOpeningBalance !== 0
+                  ? `Opening (${formatCurrency(messFund.totalOpeningBalance)}) + Deposits − Mess Expenses`
+                  : 'Deposits − Mess Fund Expenses'}
+              </p>
             </div>
           </div>
 

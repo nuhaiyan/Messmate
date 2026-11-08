@@ -72,9 +72,14 @@ export interface MonthlyAccountingResult {
   mealRate: Decimal;
   isMealRateAvailable: boolean;
   totalDeposits: Decimal;
+  totalOpeningBalance: Decimal;
+  totalOpeningAdvances: Decimal;
+  totalOpeningDues: Decimal;
+  totalMemberDeposits: Decimal;
   totalSharedExpenses: Decimal;
   totalIndividualExpenses: Decimal;
   totalAdditionalExpenses: Decimal;
+  totalExpenses: Decimal;
   totalPersonalPayments: Decimal;
   totalMessFundPayments: Decimal;
   availableMessFund: Decimal;
@@ -289,9 +294,19 @@ export class MessAccountingEngine {
 
     let totalNetAdvances = new Decimal(0);
     let totalNetDues = new Decimal(0);
+    let totalOpeningBalance = new Decimal(0);
+    let totalOpeningAdvances = new Decimal(0);
+    let totalOpeningDues = new Decimal(0);
 
     for (const m of members) {
       const openingBal = this.toDecimal(m.openingBalance);
+      totalOpeningBalance = totalOpeningBalance.plus(openingBal);
+      if (openingBal.greaterThan(0)) {
+        totalOpeningAdvances = totalOpeningAdvances.plus(openingBal);
+      } else if (openingBal.isNegative()) {
+        totalOpeningDues = totalOpeningDues.plus(openingBal.abs());
+      }
+
       const mMeals = memberMealsMap[m.memberId] || new Decimal(0);
       const mMealCost = this.roundCurrency(mMeals.times(mealRate));
       const mSharedCost = this.roundCurrency(memberSharedCostMap[m.memberId] || new Decimal(0));
@@ -341,6 +356,13 @@ export class MessAccountingEngine {
     }
 
     const totalAdditionalExpenses = totalSharedExpenses.plus(totalIndividualExpenses);
+    const totalMemberDeposits = this.roundCurrency(totalDeposits.plus(totalOpeningAdvances));
+    const totalExpenses = this.roundCurrency(totalBazarExpense.plus(totalAdditionalExpenses).plus(totalOpeningDues));
+
+    // Available Mess Fund = Total Opening Balances + Total Deposits - Total Mess Fund Expenditures
+    const availableMessFund = this.roundCurrency(
+      totalOpeningBalance.plus(totalDeposits).minus(totalMessFundPayments)
+    );
 
     return {
       totalMeals,
@@ -348,12 +370,17 @@ export class MessAccountingEngine {
       mealRate,
       isMealRateAvailable,
       totalDeposits: this.roundCurrency(totalDeposits),
+      totalOpeningBalance: this.roundCurrency(totalOpeningBalance),
+      totalOpeningAdvances: this.roundCurrency(totalOpeningAdvances),
+      totalOpeningDues: this.roundCurrency(totalOpeningDues),
+      totalMemberDeposits,
       totalSharedExpenses: this.roundCurrency(totalSharedExpenses),
       totalIndividualExpenses: this.roundCurrency(totalIndividualExpenses),
       totalAdditionalExpenses: this.roundCurrency(totalAdditionalExpenses),
+      totalExpenses,
       totalPersonalPayments: this.roundCurrency(totalPersonalPayments),
       totalMessFundPayments: this.roundCurrency(totalMessFundPayments),
-      availableMessFund: this.roundCurrency(totalDeposits.minus(totalMessFundPayments)),
+      availableMessFund,
       totalNetAdvances: this.roundCurrency(totalNetAdvances),
       totalNetDues: this.roundCurrency(totalNetDues),
       membersSummary,

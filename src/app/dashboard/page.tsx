@@ -240,7 +240,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     mealCost: Number(m.mealCost.toString()),
     otherCost: Number(m.sharedExpenseCost.plus(m.individualExpenseCost).toString()),
     totalCost: Number(m.totalCost.toString()),
-    deposits: Number(m.deposits.toString()),
+    deposits: Number(m.deposits.plus(m.openingBalance.greaterThan(0) ? m.openingBalance : 0).toString()),
     balance: Number(m.closingBalance.toString()),
     dueAmount: Number(m.dueAmount.toString()),
     advanceAmount: Number(m.advanceAmount.toString()),
@@ -252,7 +252,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     totalMeals: Number(m.totalMeals.toString()),
     mealCost: Number(m.mealCost.toString()),
     otherCosts: Number(m.sharedExpenseCost.plus(m.individualExpenseCost).toString()),
-    deposits: Number(m.deposits.toString()),
+    deposits: Number(m.deposits.plus(m.openingBalance.greaterThan(0) ? m.openingBalance : 0).toString()),
     personalPayments: Number(m.personalPayments.toString()),
     closingBalance: Number(m.closingBalance.toString()),
     isAdvance: m.isAdvance,
@@ -354,8 +354,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             monthBazarExpense: Number(result.totalBazarExpense.toString()),
             mealRate: result.isMealRateAvailable ? Number(result.mealRate.toString()) : 0,
             isMealRateAvailable: result.isMealRateAvailable,
-            totalDeposits: Number(result.totalDeposits.toString()),
+            totalDeposits: Number(result.totalMemberDeposits.toString()),
+            totalOpeningBalance: Number(result.totalOpeningBalance.toString()),
+            totalOpeningAdvances: Number(result.totalOpeningAdvances.toString()),
+            totalOpeningDues: Number(result.totalOpeningDues.toString()),
             totalAdditionalExpenses: Number(result.totalAdditionalExpenses.toString()),
+            totalExpenses: Number(result.totalExpenses.toString()),
             availableMessFund: Number(result.availableMessFund.toString()),
             totalNetDues: Number(result.totalNetDues.toString()),
             totalNetAdvances: Number(result.totalNetAdvances.toString()),
@@ -376,7 +380,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         bazarExpensesData={bazarExpensesData}
         memberMealsData={memberMealsData}
         depositVsExpense={{
-          deposits: Number(result.totalDeposits.toString()),
+          deposits: Number(result.totalMemberDeposits.toString()),
           bazar: Number(result.totalBazarExpense.toString()),
           additional: Number(result.totalAdditionalExpenses.toString()),
         }}

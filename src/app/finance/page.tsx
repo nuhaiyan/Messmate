@@ -95,7 +95,10 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
       <FinanceManagementClient
         fineFund={fineFund}
         messFund={{
-          totalDeposits: accountsData.calculationResult.totalDeposits.toNumber(),
+          totalDeposits: accountsData.calculationResult.totalMemberDeposits.toNumber(),
+          totalOpeningBalance: accountsData.calculationResult.totalOpeningBalance.toNumber(),
+          totalOpeningAdvances: accountsData.calculationResult.totalOpeningAdvances.toNumber(),
+          totalOpeningDues: accountsData.calculationResult.totalOpeningDues.toNumber(),
           totalSharedExpenses: accountsData.calculationResult.totalSharedExpenses.toNumber(),
           totalIndividualExpenses: accountsData.calculationResult.totalIndividualExpenses.toNumber(),
           totalPersonalPayments: accountsData.calculationResult.totalPersonalPayments.toNumber(),

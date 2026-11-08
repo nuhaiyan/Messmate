@@ -146,7 +146,11 @@ interface InteractiveDashboardCardsProps {
     mealRate: number;
     isMealRateAvailable: boolean;
     totalDeposits: number;
+    totalOpeningBalance?: number;
+    totalOpeningAdvances?: number;
+    totalOpeningDues?: number;
     totalAdditionalExpenses: number;
+    totalExpenses?: number;
     availableMessFund: number;
     totalNetDues: number;
     totalNetAdvances: number;
@@ -375,7 +379,9 @@ export function InteractiveDashboardCards({
   // -------------------------------------------------------------------------
   // SECTION 1: MAIN DASHBOARD OVERVIEW CARDS (ONLY 4 IMPORTANT METRICS)
   // -------------------------------------------------------------------------
-  const totalExpensesValue = metrics.monthBazarExpense + metrics.totalAdditionalExpenses;
+  const totalExpensesValue =
+    metrics.totalExpenses ??
+    (metrics.monthBazarExpense + metrics.totalAdditionalExpenses + (metrics.totalOpeningDues || 0));
 
   const section1Cards = [
     {
@@ -407,8 +413,12 @@ export function InteractiveDashboardCards({
       title: language === 'bn' ? 'মোট খরচ' : (t.dashboard?.totalExpenses || 'Total Expenses'),
       value: formatCurrency(totalExpensesValue),
       subtitle: language === 'bn'
-        ? `বাজার: ${formatCurrency(metrics.monthBazarExpense)} • অন্যান্য: ${formatCurrency(metrics.totalAdditionalExpenses)}`
-        : `Bazar: ${formatCurrency(metrics.monthBazarExpense)} • Other: ${formatCurrency(metrics.totalAdditionalExpenses)}`,
+        ? (metrics.totalOpeningDues && metrics.totalOpeningDues > 0
+            ? `বাজার: ${formatCurrency(metrics.monthBazarExpense)} • অন্যান্য: ${formatCurrency(metrics.totalAdditionalExpenses)} • পূর্বের বকেয়া: ${formatCurrency(metrics.totalOpeningDues)}`
+            : `বাজার: ${formatCurrency(metrics.monthBazarExpense)} • অন্যান্য: ${formatCurrency(metrics.totalAdditionalExpenses)}`)
+        : (metrics.totalOpeningDues && metrics.totalOpeningDues > 0
+            ? `Bazar: ${formatCurrency(metrics.monthBazarExpense)} • Other: ${formatCurrency(metrics.totalAdditionalExpenses)} • Prior Dues: ${formatCurrency(metrics.totalOpeningDues)}`
+            : `Bazar: ${formatCurrency(metrics.monthBazarExpense)} • Other: ${formatCurrency(metrics.totalAdditionalExpenses)}`),
       badge: language === 'bn' ? 'বাজার + অন্যান্য' : 'Bazar + Fixed',
       badgeColor: 'bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800',
       icon: Receipt,
@@ -421,8 +431,12 @@ export function InteractiveDashboardCards({
       title: language === 'bn' ? 'বর্তমান মেস ফান্ড' : (t.dashboard?.messFund || 'Current Mess Fund'),
       value: formatCurrency(metrics.availableMessFund),
       subtitle: language === 'bn'
-        ? `প্রকৃত ফান্ড ব্যালেন্স (জমা - মেস ব্যয়)`
-        : (t.dashboard?.messFundSubtitle || 'Actual Available Fund (Deposits - Spent)'),
+        ? (metrics.totalOpeningBalance !== undefined && metrics.totalOpeningBalance !== 0
+            ? `প্রকৃত ফান্ড (প্রারম্ভিক জের: ${formatCurrency(metrics.totalOpeningBalance)} + জমা - মেস ব্যয়)`
+            : `প্রকৃত ফান্ড ব্যালেন্স (জমা - মেস ব্যয়)`)
+        : (metrics.totalOpeningBalance !== undefined && metrics.totalOpeningBalance !== 0
+            ? `Available Fund (Opening: ${formatCurrency(metrics.totalOpeningBalance)} + Deposits - Spent)`
+            : `Actual Available Fund (Deposits - Spent)`),
       badge: metrics.availableMessFund >= 0
         ? (language === 'bn' ? 'সারপ্লাস ব্যালেন্স' : 'Available Surplus')
         : (language === 'bn' ? 'ফান্ড ঘাটতি' : 'Fund Deficit'),
@@ -477,7 +491,13 @@ export function InteractiveDashboardCards({
       type: 'deposits' as DashboardCardType,
       title: language === 'bn' ? 'সদস্যদের মোট জমা' : 'Total Member Deposits',
       value: formatCurrency(metrics.totalDeposits),
-      subtitle: language === 'bn' ? 'কমন ফান্ডে সদস্যদের জমাকৃত অর্থ' : 'Common mess fund contributions',
+      subtitle: language === 'bn'
+        ? (metrics.totalOpeningAdvances && metrics.totalOpeningAdvances > 0
+            ? `চলতি জমা + প্রারম্ভিক উদ্বৃত্ত (${formatCurrency(metrics.totalOpeningAdvances)})`
+            : 'কমন ফান্ডে সদস্যদের জমাকৃত অর্থ')
+        : (metrics.totalOpeningAdvances && metrics.totalOpeningAdvances > 0
+            ? `Deposits + Opening Balance (${formatCurrency(metrics.totalOpeningAdvances)})`
+            : 'Common mess fund contributions'),
       icon: Wallet,
       cardBg: 'bg-sky-50/70 dark:bg-sky-950/20 border-sky-200/70 dark:border-sky-900/40 hover:border-sky-400 dark:hover:border-sky-700',
       iconBg: 'bg-sky-500 text-white shadow-xs shadow-sky-500/30',

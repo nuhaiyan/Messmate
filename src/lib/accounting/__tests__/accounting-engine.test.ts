@@ -459,6 +459,37 @@ runTest('Scenario 17: Penny-safe equal additional expense distribution sums to e
   assert(sumAllocated.equals(100), `Total allocated (${sumAllocated}) must equal exactly 100`);
 });
 
+// 18. Initial opening balances properly update available mess fund and total deposits
+runTest('Scenario 18: Member initial opening balances are incorporated into mess fund and total deposits', () => {
+  const members: MemberMealData[] = [
+    { memberId: 'm1', fullName: 'A', breakfast: 1, lunch: 1, dinner: 1, totalMeals: 3, isActive: true, openingBalance: 1500 },
+    { memberId: 'm2', fullName: 'B', breakfast: 1, lunch: 1, dinner: 1, totalMeals: 3, isActive: true, openingBalance: -500 },
+  ];
+  const deposits = [
+    { id: 'd1', memberId: 'm1', amount: 3000 },
+  ];
+  const bazar = [
+    { id: 'b1', amount: 2000, category: 'Food', paymentSource: 'MESS_FUND' as const },
+  ];
+
+  const res = MessAccountingEngine.calculateMonthlyAccounts({
+    members,
+    bazarExpenses: bazar,
+    additionalExpenses: [],
+    deposits,
+  });
+
+  // Net Opening Balance = 1500 - 500 = 1000
+  // Opening Advances = 1500, Opening Dues = 500
+  // Total Member Deposits = 3000 + 1500 = 4500
+  // Available Mess Fund = Opening Balance (1000) + Deposits (3000) - Spent (2000) = 2000
+  assert(res.totalOpeningBalance.equals(1000), `Total opening balance should be 1000, got ${res.totalOpeningBalance}`);
+  assert(res.totalOpeningAdvances.equals(1500), `Total opening advances should be 1500, got ${res.totalOpeningAdvances}`);
+  assert(res.totalOpeningDues.equals(500), `Total opening dues should be 500, got ${res.totalOpeningDues}`);
+  assert(res.totalMemberDeposits.equals(4500), `Total member deposits should be 4500, got ${res.totalMemberDeposits}`);
+  assert(res.availableMessFund.equals(2000), `Available mess fund should be 2000, got ${res.availableMessFund}`);
+});
+
 console.log('\n======================================================');
-console.log(' ALL 17 ACCOUNTING ENGINE TESTS PASSED SUCCESSFULLY! ');
+console.log(' ALL 18 ACCOUNTING ENGINE TESTS PASSED SUCCESSFULLY! ');
 console.log('======================================================\n');

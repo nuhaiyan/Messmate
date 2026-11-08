@@ -126,7 +126,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
     totalMeals: Number(result.totalMeals.toString()),
     totalBazar: Number(result.totalBazarExpense.toString()),
     mealRate: monthlyMealRate,
-    totalDeposits: Number(result.totalDeposits.toString()),
+    totalDeposits: Number(result.totalMemberDeposits.toString()),
     totalOther: Number(result.totalAdditionalExpenses.toString()),
     members: result.memberList.map((m) => ({
       member: m.fullName,
@@ -135,7 +135,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
       mealCost: Number(m.mealCost.toString()),
       otherCost: Number(m.sharedExpenseCost.plus(m.individualExpenseCost).toString()),
       totalCost: Number(m.totalCost.toString()),
-      deposits: Number(m.deposits.toString()),
+      deposits: Number(m.deposits.plus(m.openingBalance.greaterThan(0) ? m.openingBalance : 0).toString()),
       balance: Number(m.closingBalance.toString()),
       isAdvance: m.isAdvance,
       isDue: m.isDue,
