@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Building2,
   MapPin,
@@ -18,9 +19,16 @@ import {
   Edit3,
   X,
   Compass,
+  RotateCcw,
+  AlertTriangle,
+  Trash2,
+  ShieldAlert,
+  Loader2,
+  HelpCircle,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/context';
 import { updateMessProfileAction } from '@/app/actions/mess-profile';
+import { resetCompleteAccountingAction } from '@/app/actions/admin-reset';
 
 interface MessProfileClientProps {
   initialMess: {
@@ -41,15 +49,20 @@ interface MessProfileClientProps {
     createdAt: string;
   };
   isManagerOrAdmin: boolean;
+  isAdmin?: boolean;
+  isPrimaryAdmin?: boolean;
   primaryAdminName: string;
 }
 
 export function MessProfileClient({
   initialMess,
   isManagerOrAdmin,
+  isAdmin = false,
+  isPrimaryAdmin = false,
   primaryAdminName,
 }: MessProfileClientProps) {
   const { t } = useI18n();
+  const router = useRouter();
   const [mess, setMess] = useState(initialMess);
 
   // Edit Modal State
@@ -159,6 +172,61 @@ export function MessProfileClient({
         setErrorMessage(res.error || 'Failed to update mess profile.');
       }
     });
+  };
+
+  // Admin Complete Accounting Reset State
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [resetScope, setResetScope] = useState<'CURRENT_MONTH' | 'ALL_TIME'>('CURRENT_MONTH');
+  const [resetInitialBalances, setResetInitialBalances] = useState(true);
+  const [confirmationInput, setConfirmationInput] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetFeedback, setResetFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const handleExecuteReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (confirmationInput.trim().toUpperCase() !== 'RESET') {
+      setResetFeedback({
+        type: 'error',
+        message: 'নিশ্চিত করতে অনুগ্রহ করে সঠিকভাবে "RESET" লিখুন (Type RESET to confirm)।',
+      });
+      return;
+    }
+
+    setIsResetting(true);
+    setResetFeedback(null);
+
+    try {
+      const res = await resetCompleteAccountingAction({
+        scope: resetScope,
+        resetMemberInitialBalances: resetInitialBalances,
+        confirmationWord: confirmationInput,
+      });
+
+      if (!res.success) {
+        throw new Error(res.error || 'হিসাব রিসেট সম্পন্ন করা সম্ভব হয়নি।');
+      }
+
+      const msg = res.message || 'হিসাব সফলভাবে রিসেট করা হয়েছে।';
+      setResetFeedback({
+        type: 'success',
+        message: msg,
+      });
+      setSuccessMessage(msg);
+
+      setTimeout(() => {
+        setIsResetModalOpen(false);
+        setConfirmationInput('');
+        setResetFeedback(null);
+        router.refresh();
+      }, 1500);
+    } catch (err: any) {
+      setResetFeedback({
+        type: 'error',
+        message: err.message || 'রিসেট প্রক্রিয়াতে ত্রুটি দেখা দিয়েছে।',
+      });
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   return (
@@ -405,6 +473,67 @@ export function MessProfileClient({
               </div>
             </div>
           </div>
+
+          {/* Admin Accounting Reset Card (Strictly Admin / Primary Admin) */}
+          {isAdmin && (
+            <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border-2 border-rose-300 dark:border-rose-900/80 shadow-[0_2px_12px_rgba(225,29,72,0.06)] space-y-4">
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                    <RotateCcw className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                        হিসাব রিসেট ও নতুন মাস শুরু (Reset Accounts & Fresh Start)
+                      </h3>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 uppercase tracking-wider">
+                        Admin Only
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                      প্রতি মাসে বা নতুনভাবে মেসের হিসাব শুরু করার সুবিধার্থে অ্যাডমিন এখান থেকে মেসের হিসাব রিসেট করতে পারবেন।
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetScope('CURRENT_MONTH');
+                    setConfirmationInput('');
+                    setResetInitialBalances(true);
+                    setResetFeedback(null);
+                    setIsResetModalOpen(true);
+                  }}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow-md transition-all cursor-pointer"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>হিসাব রিসেট করুন (Reset Accounts)</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+                <div className="p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 space-y-1">
+                  <span className="font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-amber-600" /> ১. চলতি মাসের ফ্রেশ রিসেট (Monthly Reset)
+                  </span>
+                  <p className="text-[11px] text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
+                    চলতি মাসের সমস্ত মিল, বাজার খরচ, অতিরিক্ত খরচ ও ডিপোজিট রেকর্ড মুছে শূন্য থেকে নতুন মাস শুরু করবে।
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-800/60 space-y-1">
+                  <span className="font-bold text-rose-900 dark:text-rose-200 flex items-center gap-1.5">
+                    <ShieldAlert className="w-3.5 h-3.5 text-rose-600" /> ২. সম্পূর্ণ মেস রিসেট (All-Time Reset)
+                  </span>
+                  <p className="text-[11px] text-rose-800/80 dark:text-rose-300/80 leading-relaxed">
+                    মেসের শুরু থেকে সমস্ত হিসাব ও ব্যালেন্স সম্পূর্ণ মুছে শূন্য করে দিবে। সদস্যদের অ্যাকাউন্ট, রুম ও মেস প্রোফাইল অক্ষত থাকবে।
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -646,6 +775,191 @@ export function MessProfileClient({
                 >
                   <Save className="w-4 h-4" />
                   <span>{isPending ? 'Saving Changes...' : 'Save Changes'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* ADMIN ACCOUNTING RESET CONFIRMATION MODAL */}
+      {isResetModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-6 sm:p-7 relative max-h-[92vh] overflow-y-auto">
+            {/* Modal Close Button */}
+            <button
+              onClick={() => {
+                setIsResetModalOpen(false);
+                setResetFeedback(null);
+                setConfirmationInput('');
+              }}
+              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header */}
+            <div className="mb-5 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 block">
+                  Admin Security Action
+                </span>
+                <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+                  মেসের সকল হিসাব রিসেট নিশ্চিতকরণ
+                </h2>
+              </div>
+            </div>
+
+            <form onSubmit={handleExecuteReset} className="space-y-4">
+              {/* Feedback Alert */}
+              {resetFeedback && (
+                <div
+                  className={`p-3.5 rounded-xl text-xs font-medium flex items-start gap-2.5 ${
+                    resetFeedback.type === 'success'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                      : 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+                  }`}
+                >
+                  {resetFeedback.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+                  )}
+                  <span className="leading-relaxed">{resetFeedback.message}</span>
+                </div>
+              )}
+
+              {/* Scope Selector */}
+              <div>
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-2">
+                  রিসেটের পরিধি নির্বাচন করুন (Select Reset Scope):
+                </label>
+                <div className="space-y-2">
+                  <label
+                    onClick={() => setResetScope('CURRENT_MONTH')}
+                    className={`p-3 rounded-xl border flex items-start gap-3 cursor-pointer transition-colors ${
+                      resetScope === 'CURRENT_MONTH'
+                        ? 'border-amber-500 bg-amber-50/60 dark:bg-amber-950/30 dark:border-amber-700'
+                        : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="resetScope"
+                      checked={resetScope === 'CURRENT_MONTH'}
+                      onChange={() => setResetScope('CURRENT_MONTH')}
+                      className="mt-1 text-amber-600 focus:ring-amber-500"
+                    />
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">
+                        চলতি মাসের হিসাব রিসেট (Monthly Fresh Start)
+                      </span>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                        শুধুমাত্র চলতি মাসের সকল মিল এন্ট্রি, বাজার খরচ, অতিরিক্ত খরচ, ক্লোজিং ও ডিপোজিট মুছে শূন্য (০.০০) করে দিবে। প্রতি নতুন মাসে এটি সুবিধাজনক।
+                      </p>
+                    </div>
+                  </label>
+
+                  <label
+                    onClick={() => setResetScope('ALL_TIME')}
+                    className={`p-3 rounded-xl border flex items-start gap-3 cursor-pointer transition-colors ${
+                      resetScope === 'ALL_TIME'
+                        ? 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/30 dark:border-rose-700'
+                        : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="resetScope"
+                      checked={resetScope === 'ALL_TIME'}
+                      onChange={() => setResetScope('ALL_TIME')}
+                      className="mt-1 text-rose-600 focus:ring-rose-500"
+                    />
+                    <div>
+                      <span className="text-xs font-bold text-rose-700 dark:text-rose-400 block">
+                        মেসের সমস্ত অতীত ও বর্তমান হিসাব সম্পূর্ণ রিসেট (All-Time Reset)
+                      </span>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                        মেসের সমস্ত মাসের মিল, বাজার খরচ, ডিপোজিট, জরিমানা, শিডিউল ও লেজার ব্যালেন্স সম্পূর্ণ মুছে শূন্য থেকে শুরু হবে। সদস্যদের অ্যাকাউন্ট অক্ষত থাকবে।
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Initial Balances Checkbox */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                <label className="flex items-center gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={resetInitialBalances}
+                    onChange={(e) => setResetInitialBalances(e.target.checked)}
+                    className="w-4 h-4 rounded text-rose-600 focus:ring-rose-500"
+                  />
+                  <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                    সদস্যদের প্রারম্ভিক ব্যালেন্স (Initial Opening Balance) শূন্য (০.০০) করুন
+                  </span>
+                </label>
+              </div>
+
+              {/* Safety Warning */}
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-[11px] text-rose-800 dark:text-rose-300 space-y-1">
+                <p className="font-bold flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                  সতর্কতা: এটি একটি অপ্রত্যাবর্তনীয় (irreversible) কাজ!
+                </p>
+                <p className="leading-relaxed">
+                  রিসেট নিশ্চিত করলে সমস্ত নির্বাচিত ট্রানজ্যাকশন ডাটাবেজ থেকে স্থায়ীভাবে মুছে যাবে। কোনো সদস্যদের ইউজার অ্যাকাউন্ট বা পাসওয়ার্ড ডিলিট হবে না।
+                </p>
+              </div>
+
+              {/* Confirmation Input Box */}
+              <div>
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                  নিশ্চিত করতে নিচের বক্সে <span className="font-mono text-rose-600 font-black">RESET</span> লিখুন *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={confirmationInput}
+                  onChange={(e) => setConfirmationInput(e.target.value)}
+                  placeholder="RESET টাইপ করুন"
+                  className="w-full px-3.5 py-2 rounded-xl border border-rose-300 dark:border-rose-800 bg-white dark:bg-slate-800 text-sm font-black text-rose-600 dark:text-rose-400 focus:outline-rose-500 tracking-wider"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsResetModalOpen(false);
+                    setResetFeedback(null);
+                    setConfirmationInput('');
+                  }}
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  বাতিল
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={isResetting || confirmationInput.trim().toUpperCase() !== 'RESET'}
+                  className="flex items-center gap-2 px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold text-xs shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {isResetting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>রিসেট হচ্ছে...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>নিশ্চিত করুন ও সম্পূর্ণ রিসেট করুন</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

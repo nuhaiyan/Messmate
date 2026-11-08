@@ -62,6 +62,8 @@ export default async function MessProfilePage() {
           createdAt: messData.createdAt,
         }}
         isManagerOrAdmin={canEditProfile}
+        isAdmin={session.isPrimaryAdmin || session.isAdmin}
+        isPrimaryAdmin={session.isPrimaryAdmin}
         primaryAdminName={primaryAdmin.fullName}
       />
     </DashboardShell>
