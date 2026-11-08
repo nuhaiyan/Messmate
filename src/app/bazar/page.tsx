@@ -90,6 +90,7 @@ export default async function BazarPage({ searchParams }: BazarPageProps) {
     payerMemberId: e.payerMemberId,
     payerName: e.payerMember?.fullName || null,
     description: e.description,
+    isApproved: e.isApproved,
   }));
 
   const memberOptions = activeMembers.map((m) => ({

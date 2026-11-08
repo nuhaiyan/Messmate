@@ -64,14 +64,14 @@ export async function getMonthAccountingData(messId: string, year: number, month
     }
   }
 
-  // Fetch bazar expenses
+  // Fetch bazar expenses (only approved count toward meal rate and mess accounts)
   const bazarExpenses = await prisma.expense.findMany({
-    where: { periodId: period.id, expenseType: 'BAZAR' },
+    where: { periodId: period.id, expenseType: 'BAZAR', isApproved: true },
   });
 
-  // Fetch additional expenses (shared and individual)
+  // Fetch additional expenses (shared and individual - only approved count toward accounts)
   const additionalExpenses = await prisma.expense.findMany({
-    where: { periodId: period.id, expenseType: { in: ['SHARED', 'INDIVIDUAL'] } },
+    where: { periodId: period.id, expenseType: { in: ['SHARED', 'INDIVIDUAL'] }, isApproved: true },
     include: { sharedAllocations: true },
   });
 

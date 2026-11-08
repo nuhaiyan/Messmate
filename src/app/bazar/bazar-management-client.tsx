@@ -12,6 +12,7 @@ import {
   DollarSign,
   AlertCircle,
   X,
+  Check,
   Tag,
   Receipt,
   Edit3,
@@ -26,7 +27,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { addBazarExpenseAction, updateBazarExpenseAction, deleteBazarExpenseAction } from '@/app/actions/bazar';
+import {
+  addBazarExpenseAction,
+  updateBazarExpenseAction,
+  deleteBazarExpenseAction,
+  approveBazarExpenseAction,
+  rejectBazarExpenseAction,
+} from '@/app/actions/bazar';
 import {
   createBazarScheduleAction,
   updateBazarScheduleAction,
@@ -56,6 +63,7 @@ export interface BazarItem {
   payerMemberId: string | null;
   payerName: string | null;
   description: string | null;
+  isApproved?: boolean;
 }
 
 export interface MemberOption {
@@ -349,6 +357,19 @@ export function BazarManagementClient({
     setLoading(false);
   };
 
+  const handleApproveExpense = async (id: string) => {
+    setLoading(true);
+    await approveBazarExpenseAction(id);
+    setLoading(false);
+  };
+
+  const handleRejectExpense = async (id: string) => {
+    if (!confirm('Are you sure you want to reject/delete this pending bazar expense?')) return;
+    setLoading(true);
+    await rejectBazarExpenseAction(id);
+    setLoading(false);
+  };
+
   // -------------------------------------------------------------
   // COMPUTED STATS & FILTERING
   // -------------------------------------------------------------
@@ -419,21 +440,23 @@ export function BazarManagementClient({
           </p>
         </div>
 
-        {isManager && !isClosed && (
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={handleOpenAddSchedule}
-              className="flex items-center gap-1.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold shadow-xs"
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              <span>Create Bazar Schedule</span>
-            </Button>
+        {!isClosed && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {isManager && (
+              <Button
+                onClick={handleOpenAddSchedule}
+                className="flex items-center gap-1.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold shadow-xs"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Create Bazar Schedule</span>
+              </Button>
+            )}
             <Button
               onClick={() => setExpenseModalOpen(true)}
               className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Add Bazar Expense</span>
+              <span>{isManager ? 'Add Bazar Expense' : 'বাজার খরচ জমা দিন (Submit Expense)'}</span>
             </Button>
           </div>
         )}
@@ -804,6 +827,18 @@ export function BazarManagementClient({
             </div>
           </div>
 
+          {/* Pending Approvals Notice */}
+          {expenses.filter((e) => e.isApproved === false).length > 0 && (
+            <div className="p-3.5 mb-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs rounded-xl flex items-center justify-between gap-3 shadow-2xs">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>
+                  <strong>{expenses.filter((e) => e.isApproved === false).length}টি বাজার খরচ</strong> অনুমোদনের অপেক্ষায় রয়েছে। {isManager ? 'ম্যানেজার বা অ্যাডমিন হিসেবে আপনি নিচের টেবিল থেকে সরাসরি অনুমোদন (✓) বা বাতিল (✕) করতে পারেন।' : 'ম্যানেজার বা অ্যাডমিন অনুমোদন করলে তা মূল খরচে যোগ হবে।'}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Table */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-2xs">
             <div className="overflow-x-auto">
@@ -833,7 +868,14 @@ export function BazarManagementClient({
                           {formatDate(exp.date)}
                         </td>
                         <td className="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100">
-                          {exp.title}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span>{exp.title}</span>
+                            {exp.isApproved === false && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 animate-pulse">
+                                ⏳ অপেক্ষমাণ (Pending)
+                              </span>
+                            )}
+                          </div>
                           {exp.description && (
                             <span className="block text-[10px] text-slate-400 font-normal">{exp.description}</span>
                           )}
@@ -863,20 +905,41 @@ export function BazarManagementClient({
                         {isManager && !isClosed && (
                           <td className="py-3 px-4 text-right">
                             <div className="flex items-center justify-end gap-1.5">
-                              <button
-                                onClick={() => handleOpenEditExpense(exp)}
-                                title="Edit Expense"
-                                className="p-1 rounded text-slate-500 hover:text-sky-600 hover:bg-slate-100 dark:hover:bg-slate-800"
-                              >
-                                <Edit3 className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteExpense(exp.id)}
-                                title="Delete Expense"
-                                className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              {exp.isApproved === false ? (
+                                <>
+                                  <button
+                                    onClick={() => handleApproveExpense(exp.id)}
+                                    title="অনুমোদন করুন (Approve)"
+                                    className="p-1 rounded text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleRejectExpense(exp.id)}
+                                    title="বাতিল করুন (Reject)"
+                                    className="p-1 rounded text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => handleOpenEditExpense(exp)}
+                                    title="Edit Expense"
+                                    className="p-1 rounded text-slate-500 hover:text-sky-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteExpense(exp.id)}
+                                    title="Delete Expense"
+                                    className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </td>
                         )}

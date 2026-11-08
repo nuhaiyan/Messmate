@@ -57,18 +57,27 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Save to public/uploads
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    await fs.mkdir(uploadsDir, { recursive: true });
+    let publicUrl: string;
+    let fileName: string;
 
     const ext = path.extname(file.name) || (file.type === 'image/png' ? '.png' : file.type === 'image/webp' ? '.webp' : '.jpg');
     const safeBase = file.name.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 30);
-    const fileName = `${uploadType}-${Date.now()}-${safeBase}${ext}`;
-    const filePath = path.join(uploadsDir, fileName);
+    fileName = `${uploadType}-${Date.now()}-${safeBase}${ext}`;
 
-    await fs.writeFile(filePath, buffer);
-
-    const publicUrl = `/uploads/${fileName}`;
+    // Try saving to public/uploads; if the filesystem is read-only (such as Netlify/Vercel serverless functions /var/task),
+    // gracefully fall back to a Base64 Data URI which stores directly in PostgreSQL and requires zero disk access.
+    try {
+      const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+      await fs.mkdir(uploadsDir, { recursive: true });
+      const filePath = path.join(uploadsDir, fileName);
+      await fs.writeFile(filePath, buffer);
+      publicUrl = `/uploads/${fileName}`;
+    } catch (fsErr: any) {
+      console.warn('Filesystem write not supported or read-only (serverless environment). Storing as Base64 Data URI:', fsErr?.message);
+      const mime = file.type || 'image/jpeg';
+      const base64 = buffer.toString('base64');
+      publicUrl = `data:${mime};base64,${base64}`;
+    }
 
     return NextResponse.json({
       success: true,

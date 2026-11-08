@@ -145,6 +145,24 @@ export async function getMemberProfileDataAction(params?: {
   const paidFineAmount = memberFines.filter((f) => f.isPaid).reduce((sum, f) => sum + Number(f.amount), 0);
   const unpaidFineAmount = memberFines.filter((f) => !f.isPaid).reduce((sum, f) => sum + Number(f.amount), 0);
 
+  // Fetch pending bazar approvals:
+  // If Admin or Manager: fetch all pending bazar expenses for this mess
+  // If general member: fetch their own pending bazar submissions
+  const pendingBazarExpenses = await prisma.expense.findMany({
+    where: {
+      messId: session.messId,
+      expenseType: 'BAZAR',
+      isApproved: false,
+      ...(isManagement ? {} : { payerMemberId: targetMemberId }),
+    },
+    include: {
+      payerMember: {
+        select: { id: true, fullName: true, avatarUrl: true },
+      },
+    },
+    orderBy: { date: 'desc' },
+  });
+
   const isOwnProfile = session.memberId === targetMemberId;
   const canEdit = isOwnProfile || session.isPrimaryAdmin || session.isAdmin || session.isManager;
 
@@ -289,6 +307,19 @@ export async function getMemberProfileDataAction(params?: {
       amount: Number(e.amount),
       category: e.category,
     })),
+    pendingBazarApprovals: pendingBazarExpenses.map((p) => ({
+      id: p.id,
+      date: p.date.toISOString().split('T')[0],
+      title: p.title,
+      amount: Number(p.amount),
+      category: p.category,
+      paymentSource: p.paymentSource,
+      description: p.description,
+      isApproved: p.isApproved,
+      payerMemberId: p.payerMemberId,
+      payerMemberName: p.payerMember?.fullName || 'সদস্য',
+      payerMemberAvatar: p.payerMember?.avatarUrl || null,
+    })),
   };
 }
 
@@ -302,31 +333,11 @@ export async function updateMemberProfileAction(data: {
   const session = await requireAuth();
   const targetMemberId = data.memberId || session.memberId;
   const isManagement = session.isPrimaryAdmin || session.isAdmin || session.isManager;
+  const isSelf = targetMemberId === session.memberId;
 
-  // General Member Permission: General members can ONLY change their OWN Profile Picture
-  if (!isManagement) {
-    if (targetMemberId !== session.memberId) {
-      return { success: false, error: 'Access Denied: General members cannot modify other members’ information.' };
-    }
-    // Update avatarUrl and optional bio only
-    await prisma.messMember.update({
-      where: { id: session.memberId },
-      data: {
-        avatarUrl: data.avatarUrl !== undefined ? data.avatarUrl : undefined,
-        bio: data.bio !== undefined ? data.bio.trim() : undefined,
-      },
-    });
-    if (data.avatarUrl !== undefined) {
-      await prisma.user.update({
-        where: { id: session.userId },
-        data: { avatarUrl: data.avatarUrl },
-      });
-    }
-    safeRevalidate('/profile');
-    safeRevalidate('/members');
-    safeRevalidate(`/members/${session.memberId}`);
-    safeRevalidate('/dashboard');
-    return { success: true };
+  // Permission Check: Members can edit their OWN profile; Management can edit any member's profile
+  if (!isManagement && !isSelf) {
+    return { success: false, error: 'Access Denied: You can only edit your own profile information.' };
   }
 
   const trimmedName = data.fullName.trim();
@@ -364,6 +375,7 @@ export async function updateMemberProfileAction(data: {
       data: {
         name: trimmedName,
         phone: trimmedPhone,
+        avatarUrl: data.avatarUrl !== undefined ? data.avatarUrl : undefined,
       },
     });
   });
@@ -376,12 +388,13 @@ export async function updateMemberProfileAction(data: {
     details: {
       targetMemberId,
       name: trimmedName,
-      isSelfUpdate: targetMemberId === session.memberId,
+      isSelfUpdate: isSelf,
     },
   });
 
   safeRevalidate('/profile');
   safeRevalidate('/members');
+  safeRevalidate(`/members/${targetMemberId}`);
   safeRevalidate('/dashboard');
 
   return { success: true };

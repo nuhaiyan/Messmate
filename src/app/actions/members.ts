@@ -615,3 +615,37 @@ export async function resetMemberPasswordAction(memberId?: string, newPassword?:
   }
   return { success: true, message: 'Password action completed.' };
 }
+
+export async function updateMemberOpeningBalanceAction(memberId: string, initialBalance: number) {
+  const session = await requireManager();
+  const member = await prisma.messMember.findUnique({
+    where: { id: memberId },
+  });
+  if (!member || member.messId !== session.messId) {
+    return { success: false, error: 'Member not found.' };
+  }
+
+  await prisma.messMember.update({
+    where: { id: memberId },
+    data: {
+      initialOpeningBalance: Number(initialBalance),
+    },
+  });
+
+  await logActivity({
+    messId: session.messId,
+    userId: session.userId,
+    action: 'MEMBER_INITIAL_BALANCE_UPDATED',
+    entity: 'MEMBER',
+    entityId: memberId,
+    details: {
+      member: member.fullName,
+      oldBalance: member.initialOpeningBalance,
+      newBalance: Number(initialBalance),
+      updatedBy: session.name,
+    },
+  });
+
+  safeRevalidate();
+  return { success: true, message: 'সদস্যের প্রারম্ভিক ব্যালেন্স সফলভাবে আপডেট করা হয়েছে।' };
+}
